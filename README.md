@@ -199,12 +199,12 @@ pytest tests/ -v
 
 ### Getting Started
 
-- [Quick Start Guide](quickstart.md)
-- [Installation](installation.md)
+- [Quick Start Guide](doc/quickstart.md)
+- [Installation](doc/installation.md)
 
 ### Mathematical Foundations
 
-- [Mathematical Framework Overview](mathematical_framework.md)
+- [Mathematical Framework Overview](doc/mathematical_framework.md)
 - [Preprocessing & Robust Scaling](preprocessing.md)
 - [NDG Encoder: Neutrosophic Triplets](encoder.md)
 - [PNPLS: Probabilistic Neutrosophic PLS](model.md)
