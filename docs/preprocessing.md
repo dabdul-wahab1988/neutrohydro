@@ -242,6 +242,7 @@ where $\tilde{X}$ is obtained by replacing $m$ values in $X$.
 Let $X = \{x_1, \ldots, x_n\}$ be ordered: $x_1 \leq x_2 \leq \ldots \leq x_n$.
 
 The median is:
+
 $$\text{median}(X) = \begin{cases} x_{(n+1)/2} & \text{if } n \text{ odd} \\ \frac{x_{n/2} + x_{n/2+1}}{2} & \text{if } n \text{ even} \end{cases}$$
 
 **Case 1**: Replace $m < n/2$ values with arbitrary outliers $\to \infty$.
