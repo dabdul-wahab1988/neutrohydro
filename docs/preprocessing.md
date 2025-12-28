@@ -156,9 +156,11 @@ Values $X_{ij} < \text{DL}_j$ are flagged as censored.
 $$X_{ij} \leftarrow \text{median}_{i': M_{i'j} = 1}(X_{i'j}) \quad \text{if } M_{ij} = 0$$
 
 **Method 2: Zero Fill**
+
 $$X_{ij} \leftarrow 0 \quad \text{if } M_{ij} = 0$$
 
 **Method 3: DL/2 Fill** (standard for environmental data)
+
 $$X_{ij} \leftarrow \frac{\text{DL}_j}{2} \quad \text{if } X_{ij} < \text{DL}_j$$
 
 ### 4. Propagation to Indeterminacy
@@ -218,6 +220,7 @@ Censored observations should be marked with **high indeterminacy** $I_{ij}$ in t
 Standardization is **affine-equivariant**:
 
 If $\tilde{X}_j = a_j X_j + b_j$, then after standardization:
+
 $$\tilde{X}^{(\text{std})}_j = \text{sign}(a_j) \cdot X^{(\text{std})}_j$$
 
 ### 2. Robustness
@@ -249,14 +252,17 @@ $$\text{median}(X) = \begin{cases} x_{(n+1)/2} & \text{if } n \text{ odd} \\ \fr
 **Case 1**: Replace $m < n/2$ values with arbitrary outliers $\to \infty$.
 
 Even if we replace the $m$ largest values with $+\infty$, the median is determined by the middle position(s). Since $m < n/2$, the middle position(s) are **not affected**, so:
+
 $$|\text{median}(\tilde{X})| < \infty$$
 
 **Case 2**: Replace $m \geq n/2$ values with outliers $\to \infty$.
 
 If we replace the largest $\lceil n/2 \rceil$ values with $+\infty$, then the median position itself is $+\infty$:
+
 $$\text{median}(\tilde{X}) = +\infty$$
 
 Therefore:
+
 $$\epsilon^*_n(\text{median}) = \frac{\lfloor n/2 \rfloor}{n}$$
 
 For large $n$: $\epsilon^* \to 0.5$.
@@ -270,6 +276,7 @@ $\square$
 **Proof**:
 
 The MAD is:
+
 $$\text{MAD}(X) = \text{median}(|X - \text{median}(X)|)$$
 
 This is a **composition** of two medians:
@@ -286,12 +293,15 @@ The median of absolute deviations is determined by the middle position among $n$
 $$\text{MAD}(\tilde{X}) < \infty \quad \text{if } m < n/2$$
 
 If $m \geq n/2$, we can make the median itself $\to \infty$, then:
+
 $$|x_i - \mu| \to \infty$$
 
 and thus:
+
 $$\text{MAD}(\tilde{X}) \to \infty$$
 
 Therefore:
+
 $$\epsilon^*_n(\text{MAD}) \approx \frac{\lfloor n/2 \rfloor}{n} \to 0.5$$
 
 $\square$
@@ -397,6 +407,7 @@ If data is highly skewed ($> 2$), consider:
 ### 3. Correlation Structure
 
 Standardization preserves correlation structure:
+
 $$\text{corr}(X^{(\text{std})}_j, X^{(\text{std})}_k) = \text{corr}(X_j, X_k)$$
 
 High correlations (e.g., $> 0.9$) may indicate:
