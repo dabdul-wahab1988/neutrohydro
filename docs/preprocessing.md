@@ -152,6 +152,7 @@ Values $X_{ij} < \text{DL}_j$ are flagged as censored.
 ### 3. Imputation Methods
 
 **Method 1: Median Fill**
+
 $$X_{ij} \leftarrow \text{median}_{i': M_{i'j} = 1}(X_{i'j}) \quad \text{if } M_{ij} = 0$$
 
 **Method 2: Zero Fill**
