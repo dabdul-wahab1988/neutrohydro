@@ -199,7 +199,7 @@ pytest tests/ -v
 
 ### Getting Started
 
-- [Quick Start Guide](doc/quickstart.md)
+- [Quick Start Guide](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quickstart.md)
 - [Installation](doc/installation.md)
 
 ### Mathematical Foundations
