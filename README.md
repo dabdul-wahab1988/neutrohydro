@@ -200,33 +200,33 @@ pytest tests/ -v
 ### Getting Started
 
 - [Quick Start Guide](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quickstart.md)
-- [Installation](doc/installation.md)
+- [Installation](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/installation.md)
 
 ### Mathematical Foundations
 
-- [Mathematical Framework Overview](doc/mathematical_framework.md)
-- [Preprocessing & Robust Scaling](preprocessing.md)
-- [NDG Encoder: Neutrosophic Triplets](encoder.md)
-- [PNPLS: Probabilistic Neutrosophic PLS](model.md)
-- [NVIP: Variable Importance Decomposition](nvip.md)
-- [Attribution: NSR and Baseline Fractions](attribution.md)
-- [Mineral Stoichiometric Inversion](minerals.md)
-- [Water Quality Assessment](quality_check.md)
-- [Model Limitations & Validity](limitations.md)
-- [Hydrogeochemical Processes](hydrogeochemical_processes.md): Mixing, Exchange, Redox
-- [Mathematical Critique](mathematical_critique.md): Rigorous review of potential issues
-- [Final Critical Review](final_critical_review.md): "Red Team" analysis of validity
+- [Mathematical Framework Overview](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/mathematical_framework.md)
+- [Preprocessing & Robust Scaling](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/preprocessing.md)
+- [NDG Encoder: Neutrosophic Triplets](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/encoder.md)
+- [PNPLS: Probabilistic Neutrosophic PLS](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/model.md)
+- [NVIP: Variable Importance Decomposition](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/nvip.md)
+- [Attribution: NSR and Baseline Fractions](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/attribution.md)
+- [Mineral Stoichiometric Inversion](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/minerals.md)
+- [Water Quality Assessment](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quality_check.md)
+- [Model Limitations & Validity](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/limitations.md)
+- [Hydrogeochemical Processes](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/hydrogeochemical_processes.md): Mixing, Exchange, Redox
+- [Mathematical Critique](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/mathematical_critique.md): Rigorous review of potential issues
+- [Final Critical Review](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/final_critical_review.md): "Red Team" analysis of validity
 
 ### API Reference
 
-- [Pipeline API](api_pipeline.md)
-- [Core Modules API](api_modules.md)
+- [Pipeline API](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/api_pipeline.md)
+- [Core Modules API](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/api_modules.md)
 
 ### Examples & Tutorials
 
-- [Basic Usage Example](examples_basic.md)
-- [Advanced Workflows](examples_advanced.md)
-- [Interpreting Results](interpreting_results.md)
+- [Basic Usage Example](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/examples_basic.md)
+- [Advanced Workflows](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/examples_advanced.md)
+- [Interpreting Results](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/interpreting_results.md)
 
 ## Overview
 
@@ -281,20 +281,6 @@ Combines rigorous mathematical optimization with expert hydrogeochemical heurist
 - **Context-Aware Inversion**: Uses **WHO Quality Flags** and **Gibbs Diagrams** to dynamically constrain the mineral solver.
 - **Redox Detection**: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry.
 - **Advanced Indices**: Integrated **Simpson's Ratio** (Standard & Inverse) for precise salinity diagnosis (Seawater vs. Recharge).
-
-## Quick Navigation
-
-**For Users:**
-
-- New to NeutroHydro? → [Quick Start Guide](quickstart.md)
-- Need to understand results? → [Interpreting Results](interpreting_results.md)
-- Looking for examples? → [Basic Examples](examples_basic.md)
-
-**For Researchers:**
-
-- Mathematical theory? → [Mathematical Framework](mathematical_framework.md)
-- Specific module details? → See individual module docs
-- Implementation details? → [API Reference](api_modules.md)
 
 **For Developers:**
 
