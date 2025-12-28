@@ -4,7 +4,7 @@
 
 NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in absolute concentration space:
 
-**NDG encoder → PNPLS regression → NVIP decomposition → NSR/$π_G$ attribution → mineral plausibility via stoichiometric inversion**
+**NDG encoder → PNPLS regression → NVIP decomposition → $NSR/π_G$ attribution → mineral plausibility via stoichiometric inversion**
 
 ## Features
 
