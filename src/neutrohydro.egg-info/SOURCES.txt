@@ -18,6 +18,7 @@ src/neutrohydro.egg-info/entry_points.txt
 src/neutrohydro.egg-info/requires.txt
 src/neutrohydro.egg-info/top_level.txt
 tests/test_attribution.py
+tests/test_comprehensive_features.py
 tests/test_conversion_integration.py
 tests/test_encoder.py
 tests/test_minerals.py

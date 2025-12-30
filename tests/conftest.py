@@ -87,6 +87,14 @@ def meq_data(random_state):
         rng.lognormal(0.8, 0.3, n),  # SO42-
         rng.lognormal(0.1, 0.3, n),  # NO3-
         rng.lognormal(-1.0, 0.5, n), # F-
+        rng.lognormal(-2.0, 0.5, n), # Zn2+ (Trace)
+        rng.lognormal(-3.0, 0.5, n), # Cd2+ (Trace)
+        rng.lognormal(-3.0, 0.5, n), # Pb2+ (Trace)
+        rng.lognormal(-1.5, 0.5, n), # B
+        rng.lognormal(-2.5, 0.5, n), # Cu2+ (Trace)
+        rng.lognormal(-3.0, 0.5, n), # As (Trace)
+        rng.lognormal(-3.0, 0.5, n), # Cr (Trace)
+        rng.lognormal(-4.0, 0.5, n), # U (Trace)
     ]).T
 
     return concentrations
