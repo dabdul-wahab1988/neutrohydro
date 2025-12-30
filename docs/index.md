@@ -107,7 +107,6 @@ Combines rigorous mathematical optimization with expert hydrogeochemical heurist
 
 - Contributing? → See `CONTRIBUTING.md` in repo root
 - Testing? → See `tests/` directory
-- Architecture? → See `CLAUDE.md` in repo root
 
 ## Citation
 

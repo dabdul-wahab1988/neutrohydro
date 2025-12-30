@@ -166,15 +166,17 @@ def calculate_simpson_ratio(
     ion_names: list[str]
 ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
     """
-    Calculate Simpson's Ratio and its Inverse for Salinity Classification.
+    Calculate Simpson's Ratio (Revelle Coefficient) and Freshening Ratio.
 
-    Standard Ratio = Cl / (HCO3 + CO3)
-    - Used to detect Seawater Intrusion (High Cl, Low HCO3).
-    - > 10 indicates Severe Contamination (likely Seawater).
+    SR = Cl / (HCO3 + CO3)
+    FR = (HCO3 + CO3) / Cl  [Inverse form]
 
-    Inverse Ratio = (HCO3 + CO3) / Cl
-    - Used to assess Freshwater Recharge vs Salinization.
-    - < 0.1 indicates Severe Salinization.
+    Interpretation (SR):
+    - < 0.5: Good quality
+    - 0.5 - 1.3: Slightly contaminated
+    - 1.3 - 2.8: Moderately contaminated
+    - 2.8 - 6.6: Injuriously contaminated
+    - 6.6 - 15.5: Highly contaminated
 
     Parameters
     ----------
@@ -185,13 +187,11 @@ def calculate_simpson_ratio(
 
     Returns
     -------
-    simpson_ratio : ndarray
-    inverse_simpson_ratio : ndarray
+    simpson_ratio, freshening_ratio : tuple of ndarrays
     """
     try:
         idx_cl = ion_names.index("Cl-")
         idx_hco3 = ion_names.index("HCO3-")
-        # Handle CO3 if present, else 0
         idx_co3 = ion_names.index("CO32-") if "CO32-" in ion_names else None
     except ValueError:
         n = c.shape[0]
@@ -201,17 +201,56 @@ def calculate_simpson_ratio(
     hco3 = c[:, idx_hco3]
     co3 = c[:, idx_co3] if idx_co3 is not None else 0.0
 
-    # Standard: Cl / (HCO3 + CO3)
-    denom_std = hco3 + co3
-    denom_std[denom_std == 0] = 1e-9
-    ratio_std = cl / denom_std
+    # SR = Cl / (HCO3 + CO3)
+    denom_sr = hco3 + co3
+    denom_sr[denom_sr == 0] = 1e-9
+    sr = cl / denom_sr
 
-    # Inverse: (HCO3 + CO3) / Cl
-    denom_inv = cl.copy()
-    denom_inv[denom_inv == 0] = 1e-9
-    ratio_inv = (hco3 + co3) / denom_inv
+    # FR = (HCO3 + CO3) / Cl
+    denom_fr = cl.copy()
+    denom_fr[denom_fr == 0] = 1e-9
+    fr = (hco3 + co3) / denom_fr
 
-    return ratio_std, ratio_inv
+    return sr, fr
+
+
+def calculate_bex(
+    c: NDArray[np.floating],
+    ion_names: list[str]
+) -> NDArray[np.floating]:
+    """
+    Calculate Base Exchange Index (BEX) as a process-direction indicator.
+
+    BEX = Na+ + K+ + Mg2+ - 1.0716 * Cl- (all in meq/L)
+
+    Interpretation:
+    - BEX > 0: Freshening trend
+    - BEX < 0: Salinization trend
+    - BEX ~ 0: No clear base-exchange signal
+
+    Parameters
+    ----------
+    c : ndarray
+    ion_names : list[str]
+
+    Returns
+    -------
+    bex : ndarray
+    """
+    try:
+        idx_na = ion_names.index("Na+")
+        idx_k = ion_names.index("K+")
+        idx_mg = ion_names.index("Mg2+")
+        idx_cl = ion_names.index("Cl-")
+    except ValueError:
+        return np.zeros(c.shape[0])
+
+    na = c[:, idx_na]
+    k = c[:, idx_k]
+    mg = c[:, idx_mg]
+    cl = c[:, idx_cl]
+
+    return na + k + mg - (1.0716 * cl)
 
 
 def validate_chloride_origin(
@@ -914,18 +953,19 @@ class MineralInverter:
         # Calculate Indices for reporting
         cai1, cai2 = calculate_cai(c, self.ion_names)
         gibbs_anion, gibbs_cation = calculate_gibbs_ratios(c, self.ion_names)
-        simpson_ratio, simpson_ratio_inv = calculate_simpson_ratio(c, self.ion_names)
+        sr, fr = calculate_simpson_ratio(c, self.ion_names)
+        bex = calculate_bex(c, self.ion_names)
         
         # Add Simpson Class
         simpson_class = []
-        for val in simpson_ratio:
-            # Thresholds based on Simpson (1946)
-            if val < 0.5: simpson_class.append("Fresh (Low Salinity)")
-            elif val < 1.3: simpson_class.append("Slightly Saline")
-            elif val < 2.8: simpson_class.append("Moderately Saline")
-            elif val < 6.6: simpson_class.append("Highly Saline")
-            elif val < 15.5: simpson_class.append("Severely Saline")
-            else: simpson_class.append("Extremely Saline (Seawater)")
+        for val in sr:
+            # Thresholds based on documentation (Todd/Simpson classes)
+            if val < 0.5: simpson_class.append("Good quality")
+            elif val < 1.3: simpson_class.append("Slightly contaminated")
+            elif val < 2.8: simpson_class.append("Moderately contaminated")
+            elif val < 6.6: simpson_class.append("Injuriously contaminated")
+            elif val < 15.5: simpson_class.append("Highly contaminated")
+            else: simpson_class.append("Extremely contaminated")
 
         return MineralInversionResult(
             s=s,
@@ -938,9 +978,10 @@ class MineralInverter:
                 "CAI_2": cai2,
                 "Gibbs_Anion": gibbs_anion,
                 "Gibbs_Cation": gibbs_cation,
-                "Simpson_Ratio": simpson_ratio,
-                "Simpson_Ratio_Inverse": simpson_ratio_inv,
-                "Simpson_Class": simpson_class
+                "Simpson_Ratio": sr,
+                "Freshening_Ratio": fr,
+                "Simpson_Class": simpson_class,
+                "BEX": bex
             }
         )
 

@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>NeutroHydro_Complete_Documentation</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pandoc-latex-environment/css/default.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="neutrohydro-complete-technical-documentation">NeutroHydro: Complete Technical Documentation</h1>
+<p><strong>Neutrosophic Chemometrics for Groundwater Analysis</strong></p>
+<p>Generated: December 28, 2025</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#getting-started">Getting Started</a>
+<ul>
+<li>Quick Start Guide</li>
+<li>Installation Guide</li>
+</ul></li>
+<li><a href="#mathematical-foundations">Mathematical Foundations</a>
+<ul>
+<li>Mathematical Framework Overview</li>
+<li>Preprocessing &amp; Robust Scaling</li>
+<li>NDG Encoder: Neutrosophic Triplets</li>
+<li>PNPLS: Probabilistic Neutrosophic PLS</li>
+<li>NVIP: Neutrosophic Variable Importance in Projection</li>
+<li>Attribution: NSR and Baseline Fractions</li>
+<li>Mineral Stoichiometric Inversion</li>
+<li>Water Quality Assessment</li>
+<li>Model Limitations &amp; Validity</li>
+<li>Hydrogeochemical Processes</li>
+<li>Mathematical Critique</li>
+<li>Final Critical Review</li>
+</ul></li>
+<li><a href="#api-reference">API Reference</a>
+<ul>
+<li>Pipeline API</li>
+<li>Core Modules API</li>
+</ul></li>
+<li><a href="#examples--tutorials">Examples &amp; Tutorials</a>
+<ul>
+<li>Basic Usage Example</li>
+<li>Advanced Workflows</li>
+<li>Interpreting Results</li>
+</ul></li>
+</ol>
+<hr />
+<h1 id="getting-started">GETTING STARTED</h1>
+<h2 id="quick-start-guide">Quick Start Guide</h2>
+<p>This guide will help you run your first analysis using NeutroHydro.</p>
+<h3 id="basic-workflow">1. Basic Workflow</h3>
+<p>The core of NeutroHydro is the <code>NeutroHydroPipeline</code>. It handles preprocessing, encoding, model training, and mineral inversion in a single step.</p>
+<h4 id="step-1-prepare-your-data">Step 1: Prepare Your Data</h4>
+<p>Prepare a CSV file (e.g., <code>data.csv</code>) with your ion concentrations. The columns should match standard chemical symbols (e.g., <code>Ca</code>, <code>Mg</code>, <code>Na</code>, <code>HCO3</code>, <code>Cl</code>, <code>SO4</code>).</p>
+<table>
+<thead>
+<tr class="header">
+<th>SampleID</th>
+<th>Ca</th>
+<th>Mg</th>
+<th>Na</th>
+<th>K</th>
+<th>HCO3</th>
+<th>Cl</th>
+<th>SO4</th>
+<th>NO3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>S1</td>
+<td>45</td>
+<td>12</td>
+<td>25</td>
+<td>3</td>
+<td>150</td>
+<td>30</td>
+<td>40</td>
+<td>5</td>
+</tr>
+<tr class="even">
+<td>S2</td>
+<td>80</td>
+<td>25</td>
+<td>60</td>
+<td>5</td>
+<td>200</td>
+<td>85</td>
+<td>90</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+<h4 id="step-2-run-the-pipeline">Step 2: Run the Pipeline</h4>
+<p>Create a Python script (e.g., <code>analysis.py</code>):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro <span class="im">import</span> NeutroHydroPipeline</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Load Data</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data.csv&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Initialize Pipeline</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># &#39;target_ions&#39; are the ions you want to model/predict (usually all major ions)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>pipeline <span class="op">=</span> NeutroHydroPipeline(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    target_ions<span class="op">=</span>[<span class="st">&quot;Ca&quot;</span>, <span class="st">&quot;Mg&quot;</span>, <span class="st">&quot;Na&quot;</span>, <span class="st">&quot;K&quot;</span>, <span class="st">&quot;HCO3&quot;</span>, <span class="st">&quot;Cl&quot;</span>, <span class="st">&quot;SO4&quot;</span>, <span class="st">&quot;NO3&quot;</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Fit the Model</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># The pipeline automatically handles preprocessing and encoding</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>pipeline.fit(df)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Get Results</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># This returns a dictionary containing all analysis outputs</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> pipeline.analyze(df)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Access Specific Outputs</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Variable Importance (VIP):&quot;</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(results[<span class="st">&quot;vip_scores&quot;</span>])</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Mineral Contributions (First Sample):&quot;</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(results[<span class="st">&quot;mineral_fractions&quot;</span>].iloc[<span class="dv">0</span>])</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Water Quality Flags:&quot;</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(results[<span class="st">&quot;quality_flags&quot;</span>].iloc[<span class="dv">0</span>])</span></code></pre></div>
+<h3 id="advanced-features">2. Advanced Features</h3>
+<h4 id="mineral-inversion-with-quality-constraints">Mineral Inversion with Quality Constraints</h4>
+<p>NeutroHydro can use water quality flags (like WHO exceedances) to constrain the mineral inversion.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The pipeline does this automatically if you use the .analyze() method.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># You can access the quality assessment directly:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>quality_df <span class="op">=</span> results[<span class="st">&quot;quality_flags&quot;</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(quality_df[[<span class="st">&quot;Exceedances&quot;</span>, <span class="st">&quot;Inferred_Sources&quot;</span>]].head())</span></code></pre></div>
+<h4 id="hydrogeochemical-indices">Hydrogeochemical Indices</h4>
+<p>The analysis also calculates standard indices automatically:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>indices <span class="op">=</span> results[<span class="st">&quot;indices&quot;</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(indices[[<span class="st">&quot;Simpson_Class&quot;</span>, <span class="st">&quot;Simpson_Ratio_Inverse&quot;</span>, <span class="st">&quot;Gibbs_Ratio_1&quot;</span>]].head())</span></code></pre></div>
+<h3 id="visualization">3. Visualization</h3>
+<p>You can quickly visualize the results using standard libraries.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot Mineral Fractions for the first 5 samples</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>minerals <span class="op">=</span> results[<span class="st">&quot;mineral_fractions&quot;</span>].head(<span class="dv">5</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>minerals.plot(kind<span class="op">=</span><span class="st">&quot;bar&quot;</span>, stacked<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">&quot;Mineral Composition&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">&quot;Fraction&quot;</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div>
+<h3 id="next-steps">Next Steps</h3>
+<ul>
+<li>Learn about the <a href="#mathematical-framework-overview">Mathematical Framework</a>.</li>
+<li>Explore <a href="#mineral-stoichiometric-inversion">Mineral Inversion</a> details.</li>
+<li>Check the <a href="#pipeline-api">API Reference</a> for full documentation.</li>
+</ul>
+<hr />
+<h2 id="installation-guide">Installation Guide</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Python 3.9 or higher</li>
+<li>pip (Python package installer)</li>
+</ul>
+<h3 id="installation-from-source">Installation from Source</h3>
+<p>NeutroHydro is currently available as a source distribution. To install it, clone the repository and install using <code>pip</code>.</p>
+<ol type="1">
+<li><p><strong>Clone the repository:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/yourusername/neutrohydro.git</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> neutrohydro</span></code></pre></div></li>
+<li><p><strong>Create a virtual environment (Recommended):</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Windows</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv .venv</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">.venv\Scripts\Activate.ps1</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux/macOS</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> venv .venv</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> .venv/bin/activate</span></code></pre></div></li>
+<li><p><strong>Install the package:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install .</span></code></pre></div>
+<p>For development (including testing and documentation tools):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-e</span> .[dev]</span></code></pre></div></li>
+</ol>
+<h3 id="verifying-installation">Verifying Installation</h3>
+<p>To verify that NeutroHydro is installed correctly, you can run the following command in your terminal:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-c</span> <span class="st">&quot;import neutrohydro; print(neutrohydro.__version__)&quot;</span></span></code></pre></div>
+<p>If installed correctly, this should print the version number without errors.</p>
+<h3 id="dependencies">Dependencies</h3>
+<p>The core dependencies are automatically installed: - <code>numpy</code> - <code>pandas</code> - <code>scikit-learn</code> - <code>scipy</code> - <code>matplotlib</code> (for plotting) - <code>seaborn</code> (for advanced visualization)</p>
+<hr />
+<h1 id="mathematical-foundations">MATHEMATICAL FOUNDATIONS</h1>
+<h2 id="mathematical-framework-overview">Mathematical Framework Overview</h2>
+<h3 id="introduction">1. Introduction</h3>
+<p>NeutroHydro implements a <strong>neutrosophic chemometric framework</strong> for groundwater analysis that operates in <strong>absolute concentration space</strong>. This document provides a high-level overview of the mathematical theory underpinning the package.</p>
+<h3 id="problem-statement">2. Problem Statement</h3>
+<h4 id="input-data">2.1 Input Data</h4>
+<ul>
+<li><strong>Predictor matrix</strong>: <span class="math inline"><em>X</em> ∈ ℝ<sup><em>n</em> × <em>p</em></sup></span>, where:
+<ul>
+<li><span class="math inline"><em>n</em></span> = number of water samples</li>
+<li><span class="math inline"><em>p</em></span> = number of ion species (e.g., Ca²⁺, Mg²⁺, Na⁺, Cl⁻, etc.)</li>
+<li><span class="math inline"><em>X</em><sub><em>i</em><em>j</em></sub></span> = concentration of ion <span class="math inline"><em>j</em></span> in sample <span class="math inline"><em>i</em></span> (units: mg/L, meq/L, etc.)</li>
+</ul></li>
+<li><strong>Target vector</strong>: <span class="math inline"><em>y</em> ∈ ℝ<sup><em>n</em></sup></span>
+<ul>
+<li>Typically: log TDS, log EC, or log ionic strength</li>
+<li>Scalar response for each sample</li>
+</ul></li>
+</ul>
+<h4 id="objectives">2.2 Objectives</h4>
+<ol type="1">
+<li><strong>Predict</strong> target <span class="math inline"><em>y</em></span> from ion concentrations <span class="math inline"><em>X</em></span></li>
+<li><strong>Decompose</strong> prediction importance into:
+<ul>
+<li>Baseline/reference component (geogenic/natural)</li>
+<li>Perturbation component (anthropogenic/anomalous)</li>
+</ul></li>
+<li><strong>Infer</strong> plausible mineral sources via stoichiometry</li>
+</ol>
+<h3 id="workflow-overview">3. Workflow Overview</h3>
+<pre><code>Raw Ion Data
+     ↓
+Preprocessing (Robust centering/scaling)
+     ↓
+NDG Encoder (T, I, F triplets)
+     ↓
+PNPLS Regression (Augmented Hilbert space)
+     ↓
+NVIP (Channel-wise variable importance)
+     ↓
+NSR/π_G (Baseline vs perturbation attribution)
+     ↓
+Mineral Inference (Stoichiometric inversion)</code></pre>
+<h3 id="key-mathematical-guarantees">4. Key Mathematical Guarantees</h3>
+<h4 id="euclidean-structure">4.1 Euclidean Structure</h4>
+<p>All operations occur in true Euclidean spaces: - Preprocessing: <span class="math inline">ℝ<sup><em>p</em></sup></span> - Augmented space: <span class="math inline">ℝ<sup>3<em>p</em></sup></span> with inner product <span class="math display">⟨<em>u</em>, <em>v</em>⟩<sub>𝒩</sub> = <em>u</em><sub><em>T</em></sub><sup>⊤</sup><em>v</em><sub><em>T</em></sub> + <em>ρ</em><sub><em>I</em></sub><em>u</em><sub><em>I</em></sub><sup>⊤</sup><em>v</em><sub><em>I</em></sub> + <em>ρ</em><sub><em>F</em></sub><em>u</em><sub><em>F</em></sub><sup>⊤</sup><em>v</em><sub><em>F</em></sub></span> - Well-defined projections, deflations, and orthogonality</p>
+<h4 id="l2-additivity-core-theorem">4.2 L2 Additivity (Core Theorem)</h4>
+<p><strong>Theorem</strong> (NVIP L2 Decomposition):</p>
+<p>For each variable <span class="math inline"><em>j</em></span>: <span class="math display"><em>V</em><em>I</em><em>P</em><sub><em>a</em><em>g</em><em>g</em></sub><sup>2</sup>(<em>j</em>) = <em>V</em><em>I</em><em>P</em><sub><em>T</em></sub><sup>2</sup>(<em>j</em>) + <em>V</em><em>I</em><em>P</em><sub><em>I</em></sub><sup>2</sup>(<em>j</em>) + <em>V</em><em>I</em><em>P</em><sub><em>F</em></sub><sup>2</sup>(<em>j</em>)</span></p>
+<h4 id="conservation-laws">4.3 Conservation Laws</h4>
+<p><strong>Unity constraints</strong>: 1. <span class="math inline"><em>π</em><sub><em>G</em></sub>(<em>j</em>) + <em>π</em><sub><em>A</em></sub>(<em>j</em>) = 1</span> for all ions <span class="math inline"><em>j</em></span> 2. <span class="math inline"><em>G</em><sub><em>i</em></sub> + <em>A</em><sub><em>i</em></sub> = 1</span> for all samples <span class="math inline"><em>i</em></span></p>
+<p><strong>Bounds</strong>: 1. <span class="math inline"><em>V</em><em>I</em><em>P</em><sub><em>c</em></sub>(<em>j</em>) ≥ 0</span> for all channels <span class="math inline"><em>c</em> ∈ {<em>T</em>, <em>I</em>, <em>F</em>}</span> 2. <span class="math inline"><em>π</em><sub><em>G</em></sub>(<em>j</em>), <em>G</em><sub><em>i</em></sub> ∈ [0, 1]</span> 3. <span class="math inline"><em>I</em><sub><em>i</em><em>j</em></sub>, <em>F</em><sub><em>i</em><em>j</em></sub> ∈ [0, 1]</span></p>
+<h4 id="stability">4.4 Stability</h4>
+<ul>
+<li><strong>Robust statistics</strong>: Median and MAD resist outliers</li>
+<li><strong>Precision weighting</strong>: High-falsity observations downweighted</li>
+<li><strong>Regularization</strong>: Optional ridge/elastic net in PLS</li>
+</ul>
+<h3 id="operational-vs.-causal-interpretation">5. Operational vs. Causal Interpretation</h3>
+<h4 id="operational-definitions">5.1 Operational Definitions</h4>
+<p>The framework defines <strong>baseline</strong> and <strong>perturbation</strong> <strong>operationally</strong>:</p>
+<ul>
+<li><strong>Baseline</strong> = component captured by <span class="math inline">ℬ(<em>X</em><sup>(<em>s</em><em>t</em><em>d</em>)</sup>)</span>
+<ul>
+<li>Median ⟹ central tendency</li>
+<li>Low-rank ⟹ common geochemical manifold</li>
+<li>Robust PCA ⟹ low-rank + sparse decomposition</li>
+</ul></li>
+<li><strong>Perturbation</strong> = deviations from baseline, quantified by falsity <span class="math inline"><em>F</em></span></li>
+</ul>
+<h4 id="external-validation-required">5.2 External Validation Required</h4>
+<p>Attribution to <strong>physical sources</strong> (geogenic vs. anthropogenic) requires <strong>external evidence</strong>: - Spatial patterns (urban vs. rural) - Temporal trends (pre/post contamination event) - Isotopic tracers - Land use correlations</p>
+<h3 id="comparison-to-other-methods">6. Comparison to Other Methods</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>NeutroHydro</th>
+<th>Standard PLS</th>
+<th>CoDa Methods</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Space</strong></td>
+<td>Absolute concentrations</td>
+<td>Absolute/relative</td>
+<td>Compositional (simplex)</td>
+</tr>
+<tr class="even">
+<td><strong>VIP decomposition</strong></td>
+<td>L2-additive (T, I, F)</td>
+<td>Single VIP</td>
+<td>Not applicable</td>
+</tr>
+<tr class="odd">
+<td><strong>Uncertainty</strong></td>
+<td>Explicit (I channel)</td>
+<td>Implicit</td>
+<td>Not standard</td>
+</tr>
+<tr class="even">
+<td><strong>Robustness</strong></td>
+<td>Falsity weighting</td>
+<td>Optional</td>
+<td>Depends on method</td>
+</tr>
+<tr class="odd">
+<td><strong>Missing data</strong></td>
+<td>EM imputation</td>
+<td>Varies</td>
+<td>Special handling</td>
+</tr>
+<tr class="even">
+<td><strong>Stoichiometry</strong></td>
+<td>Direct (NNLS)</td>
+<td>Post-hoc</td>
+<td>Difficult</td>
+</tr>
+<tr class="odd">
+<td><strong>Interpretability</strong></td>
+<td>High (3 channels)</td>
+<td>Moderate</td>
+<td>Low (log-ratios)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="computational-complexity">7. Computational Complexity</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Complexity</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Preprocessing</td>
+<td><span class="math inline"><em>O</em>(<em>n</em><em>p</em>)</span></td>
+<td>Median/MAD per column</td>
+</tr>
+<tr class="even">
+<td>NDG Encoding (median)</td>
+<td><span class="math inline"><em>O</em>(<em>n</em><em>p</em>)</span></td>
+<td>Per-column operations</td>
+</tr>
+<tr class="odd">
+<td>NDG Encoding (low-rank)</td>
+<td><span class="math inline"><em>O</em>(<em>n</em><em>p</em>min (<em>n</em>, <em>p</em>))</span></td>
+<td>SVD cost</td>
+</tr>
+<tr class="even">
+<td>PNPLS (k components)</td>
+<td><span class="math inline"><em>O</em>(<em>k</em><em>n</em><em>p</em><sup>2</sup>)</span></td>
+<td>NIPALS iterations</td>
+</tr>
+<tr class="odd">
+<td>NVIP</td>
+<td><span class="math inline"><em>O</em>(<em>k</em><em>p</em>)</span></td>
+<td>Post-PLS computation</td>
+</tr>
+<tr class="even">
+<td>Attribution</td>
+<td><span class="math inline"><em>O</em>(<em>n</em><em>p</em>)</span></td>
+<td>Linear pass</td>
+</tr>
+<tr class="odd">
+<td>Mineral NNLS (per sample)</td>
+<td><span class="math inline"><em>O</em>(<em>m</em><sup>2</sup><em>K</em>)</span></td>
+<td>Per-sample inversion</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total pipeline</strong>: <span class="math inline"><em>O</em>(<em>k</em><em>n</em><em>p</em><sup>2</sup> + <em>n</em><em>m</em><sup>2</sup><em>K</em>)</span> where typically <span class="math inline"><em>k</em> ≪ <em>n</em>, <em>p</em></span> and <span class="math inline"><em>m</em>, <em>K</em> ≲ 10</span>.</p>
+<h3 id="hyperparameter-selection">8. Hyperparameter Selection</h3>
+<h4 id="critical-parameters">8.1 Critical Parameters</h4>
+<ol type="1">
+<li><strong>Number of components</strong> <span class="math inline"><em>k</em></span>:
+<ul>
+<li>Cross-validation (minimize RMSE on held-out data)</li>
+<li>Elbow method (explained variance)</li>
+<li>Typical range: 3–10</li>
+</ul></li>
+<li><strong>Baseline type</strong>:
+<ul>
+<li><code>median</code>: Fast, robust, interpretable (default)</li>
+<li><code>low_rank</code>: Captures geochemical manifold</li>
+<li><code>robust_pca</code>: Handles sparse anomalies</li>
+</ul></li>
+<li><strong>Channel weights</strong> <span class="math inline"><em>ρ</em><sub><em>I</em></sub>, <em>ρ</em><sub><em>F</em></sub></span>:
+<ul>
+<li>Default: <span class="math inline"><em>ρ</em><sub><em>I</em></sub> = <em>ρ</em><sub><em>F</em></sub> = 1</span> (equal)</li>
+<li>Increase <span class="math inline"><em>ρ</em><sub><em>I</em></sub></span> to emphasize uncertainty</li>
+<li>Increase <span class="math inline"><em>ρ</em><sub><em>F</em></sub></span> to emphasize perturbations</li>
+</ul></li>
+<li><strong>Falsity strength</strong> <span class="math inline"><em>λ</em><sub><em>F</em></sub></span>:
+<ul>
+<li>Default: <span class="math inline"><em>λ</em><sub><em>F</em></sub> = 1</span></li>
+<li>Higher values ⟹ stronger downweighting of anomalies</li>
+<li>Typical range: 0.5–5</li>
+</ul></li>
+<li><strong>Classification threshold</strong> <span class="math inline"><em>γ</em></span>:
+<ul>
+<li>Default: <span class="math inline"><em>γ</em> = 0.7</span></li>
+<li>Higher <span class="math inline"><em>γ</em></span> ⟹ stricter baseline classification</li>
+<li>Typical range: 0.6–0.8</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="preprocessing-robust-scaling">Preprocessing &amp; Robust Scaling</h2>
+<p><strong>Module</strong>: <code>neutrohydro.preprocessing</code></p>
+<h3 id="overview">Overview</h3>
+<p>The preprocessing module implements <strong>robust, non-compositional standardization</strong> of ion concentration data. Unlike compositional data analysis (CoDa), we operate in absolute concentration space, preserving physical interpretability and additive mixing models.</p>
+<h3 id="mathematical-foundation">Mathematical Foundation</h3>
+<h4 id="input-data-1">1. Input Data</h4>
+<p><strong>Predictor matrix</strong>: <span class="math display"><em>X</em> ∈ ℝ<sup><em>n</em> × <em>p</em></sup>,  <em>X</em><sub><em>i</em><em>j</em></sub> ≥ 0</span></p>
+<p>where: - <span class="math inline"><em>n</em></span> = number of water samples - <span class="math inline"><em>p</em></span> = number of ion species - <span class="math inline"><em>X</em><sub><em>i</em><em>j</em></sub></span> = concentration of ion <span class="math inline"><em>j</em></span> in sample <span class="math inline"><em>i</em></span> (units: mg/L, mmol/L, or meq/L)</p>
+<p><strong>Target vector</strong>: <span class="math display"><em>y</em> ∈ ℝ<sup><em>n</em></sup></span></p>
+<p>Typically: <span class="math inline"><em>y</em><sub><em>i</em></sub> = log (TDS<sub><em>i</em></sub>)</span>, <span class="math inline">log (EC<sub><em>i</em></sub>)</span>, or <span class="math inline">log (<em>I</em><sub><em>i</em></sub>)</span> where <span class="math inline"><em>I</em></span> is ionic strength.</p>
+<h4 id="optional-log-transform">2. Optional Log Transform</h4>
+<p>Ion concentrations often span <strong>several orders of magnitude</strong>. For such data:</p>
+<p><span class="math display"><em>X</em><sub><em>i</em><em>j</em></sub><sup>(log )</sup> := log (<em>X</em><sub><em>i</em><em>j</em></sub> + <em>δ</em><sub><em>x</em></sub>)</span></p>
+<p>where <span class="math inline"><em>δ</em><sub><em>x</em></sub> &gt; 0</span> (default: <span class="math inline">10<sup> − 12</sup></span>) ensures numerical stability for near-zero values.</p>
+<p><strong>When to use</strong>: - Concentrations vary by <span class="math inline"> &gt; 10×</span> across ions - Want to reduce heteroscedasticity - Multiplicative mixing models are appropriate</p>
+<p><strong>When NOT to use</strong>: - Need direct physical interpretability - Stoichiometric constraints must be preserved exactly - Data already in log scale</p>
+<h4 id="robust-centering">3. Robust Centering</h4>
+<p>For each ion <span class="math inline"><em>j</em></span>:</p>
+<p><span class="math display"><em>μ</em><sub><em>j</em></sub> = median<sub><em>i</em></sub>(<em>X</em><sub><em>i</em><em>j</em></sub>)</span></p>
+<p><strong>Why median, not mean?</strong> - <strong>Robust to outliers</strong>: Median has 50% breakdown point - <strong>Stable</strong>: Unaffected by single extreme values - <strong>Appropriate for skewed distributions</strong>: Groundwater data often log-normal</p>
+<h4 id="robust-scaling">4. Robust Scaling</h4>
+<p>For each ion <span class="math inline"><em>j</em></span>:</p>
+<p><span class="math display"><em>s</em><sub><em>j</em></sub> = 1.4826 × MAD<sub><em>i</em></sub>(<em>X</em><sub><em>i</em><em>j</em></sub>)</span></p>
+<p>where <strong>MAD</strong> (Median Absolute Deviation):</p>
+<p><span class="math display">MAD<sub><em>i</em></sub>(<em>X</em><sub><em>i</em><em>j</em></sub>) = median<sub><em>i</em></sub>(|<em>X</em><sub><em>i</em><em>j</em></sub>−<em>μ</em><sub><em>j</em></sub>|)</span></p>
+<p><strong>Scaling factor 1.4826</strong>: - For normal distribution: <span class="math inline">MAD × 1.4826 ≈ <em>σ</em></span> (standard deviation) - Makes MAD-based scale <strong>consistent</strong> with standard deviation</p>
+<h4 id="standardization">5. Standardization</h4>
+<p><span class="math display">$$X^{(\text{std})}_{ij} = \frac{X_{ij} - \mu_j}{s_j + \delta_s}$$</span></p>
+<p>where <span class="math inline"><em>δ</em><sub><em>s</em></sub> &gt; 0</span> (default: <span class="math inline">10<sup> − 10</sup></span>) prevents division by zero for constant columns.</p>
+<p><strong>Similarly for target</strong>:</p>
+<p><span class="math display">$$y^{(\text{std})}_i = \frac{y_i - \mu_y}{s_y + \delta_s}$$</span></p>
+<p>where: <span class="math display"><em>μ</em><sub><em>y</em></sub> = median(<em>y</em>),  <em>s</em><sub><em>y</em></sub> = 1.4826 × MAD(<em>y</em>)</span></p>
+<h4 id="inverse-transform">6. Inverse Transform</h4>
+<p>To recover predictions in original scale:</p>
+<p><span class="math display"><em>ŷ</em><sub><em>i</em></sub> = <em>ŷ</em><sub><em>i</em></sub><sup>(std)</sup> ⋅ (<em>s</em><sub><em>y</em></sub> + <em>δ</em><sub><em>s</em></sub>) + <em>μ</em><sub><em>y</em></sub></span></p>
+<h3 id="usage-example">Usage Example</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.preprocessing <span class="im">import</span> Preprocessor</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>preprocessor <span class="op">=</span> Preprocessor(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    log_transform<span class="op">=</span><span class="va">False</span>,  <span class="co"># Use if data spans orders of magnitude</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    delta_x<span class="op">=</span><span class="fl">1e-12</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    delta_s<span class="op">=</span><span class="fl">1e-10</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit on training data</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>preprocessor.fit(X_train, y_train, feature_names<span class="op">=</span>ion_names)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Transform training data</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>X_train_std, y_train_std <span class="op">=</span> preprocessor.transform(X_train, y_train)</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Transform test data</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>X_test_std, y_test_std <span class="op">=</span> preprocessor.transform(X_test, y_test)</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Inverse transform predictions</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>y_pred_original <span class="op">=</span> preprocessor.inverse_transform_y(y_pred_std)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Access parameters</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> preprocessor.get_params()</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Centers: </span><span class="sc">{</span>params<span class="sc">.mu}</span><span class="ss">&quot;</span>)</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Scales: </span><span class="sc">{</span>params<span class="sc">.s}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<hr />
+<h2 id="ndg-encoder-neutrosophic-triplets">NDG Encoder: Neutrosophic Triplets</h2>
+<p><strong>Module</strong>: <code>neutrohydro.encoder</code></p>
+<h3 id="overview-1">Overview</h3>
+<p>The NDG (Neutrosophic Data Generator) Encoder maps each standardized ion concentration to a <strong>neutrosophic triplet</strong> <span class="math inline">(<em>T</em>, <em>I</em>, <em>F</em>)</span>:</p>
+<ul>
+<li><strong>T (Truth)</strong>: Baseline/reference component</li>
+<li><strong>I (Indeterminacy)</strong>: Uncertainty/ambiguity</li>
+<li><strong>F (Falsity)</strong>: Perturbation/anomaly likelihood</li>
+</ul>
+<p>This representation enables <strong>explicit decomposition</strong> of prediction importance into baseline and perturbation sources.</p>
+<h3 id="truth-channel-t-baseline-operator">Truth Channel (T): Baseline Operator</h3>
+<h4 id="definition">1. Definition</h4>
+<p><span class="math display"><em>X</em><sub><em>T</em></sub> = ℬ(<em>X</em><sup>(std)</sup>)</span></p>
+<p>where <span class="math inline">ℬ : ℝ<sup><em>n</em> × <em>p</em></sup> → ℝ<sup><em>n</em> × <em>p</em></sup></span> is a <strong>baseline operator</strong>.</p>
+<h4 id="baseline-operator-options">2. Baseline Operator Options</h4>
+<p><strong>Option 1: Robust Columnwise Median (Default)</strong></p>
+<p><span class="math display">(<em>X</em><sub><em>T</em></sub>)<sub><em>i</em><em>j</em></sub> = median<sub><em>i</em>′</sub>(<em>X</em><sub><em>i</em>′<em>j</em></sub><sup>(std)</sup>)</span></p>
+<p><strong>Advantages</strong>: - Fast: <span class="math inline"><em>O</em>(<em>n</em><em>p</em>)</span> - Robust to outliers - Interpretable: “central tendency”</p>
+<p><strong>When to use</strong>: Default choice for most applications.</p>
+<p><strong>Option 2: Low-Rank Baseline</strong></p>
+<p><span class="math display"><em>X</em><sub><em>T</em></sub> = arg min<sub><em>L</em> : rank(<em>L</em>) ≤ <em>r</em></sub>∥<em>X</em><sup>(std)</sup> − <em>L</em>∥<sub><em>F</em></sub><sup>2</sup></span></p>
+<p>Solution via <strong>truncated SVD</strong>:</p>
+<p><span class="math display"><em>X</em><sup>(std)</sup> = <em>U</em><em>Σ</em><em>V</em><sup>⊤</sup>,  <em>X</em><sub><em>T</em></sub> = <em>U</em><sub><em>r</em></sub><em>Σ</em><sub><em>r</em></sub><em>V</em><sub><em>r</em></sub><sup>⊤</sup></span></p>
+<p><strong>Advantages</strong>: - Captures <strong>geochemical manifold</strong> (common patterns) - Smooth, low-dimensional baseline</p>
+<p><strong>When to use</strong>: Strong correlations among ions, clear manifold structure.</p>
+<h3 id="falsity-channel-f-perturbation-likelihood">Falsity Channel (F): Perturbation Likelihood</h3>
+<h4 id="normalized-residuals">1. Normalized Residuals</h4>
+<p><span class="math display">$$u_{ij} = \frac{|R_{ij}|}{\sigma_j + \delta}$$</span></p>
+<p>where <span class="math inline"><em>δ</em> &gt; 0</span> (default: <span class="math inline">10<sup> − 10</sup></span>) prevents division by zero.</p>
+<p><strong>Interpretation</strong>: <span class="math inline"><em>u</em><sub><em>i</em><em>j</em></sub></span> measures how many “robust standard deviations” sample <span class="math inline"><em>i</em></span> deviates from baseline for ion <span class="math inline"><em>j</em></span>.</p>
+<h4 id="falsity-map">2. Falsity Map</h4>
+<p><span class="math display"><em>F</em><sub><em>i</em><em>j</em></sub> = <em>g</em><sub><em>F</em></sub>(<em>u</em><sub><em>i</em><em>j</em></sub>)</span></p>
+<p>where <span class="math inline"><em>g</em><sub><em>F</em></sub> : ℝ<sub> ≥ 0</sub> → [0, 1]</span> is a <strong>monotone increasing</strong> map.</p>
+<p><strong>Option 1: Exponential Saturation (Default)</strong></p>
+<p><span class="math display"><em>F</em><sub><em>i</em><em>j</em></sub> = 1 − exp ( − <em>u</em><sub><em>i</em><em>j</em></sub>)</span></p>
+<p><strong>Properties</strong>: - <span class="math inline"><em>F</em><sub><em>i</em><em>j</em></sub> → 0</span> as <span class="math inline"><em>u</em><sub><em>i</em><em>j</em></sub> → 0</span> (small deviations → low falsity) - <span class="math inline"><em>F</em><sub><em>i</em><em>j</em></sub> → 1</span> as <span class="math inline"><em>u</em><sub><em>i</em><em>j</em></sub> → ∞</span> (large deviations → high falsity) - Smooth, differentiable - No additional hyperparameters</p>
+<h3 id="indeterminacy-channel-i-uncertainty">Indeterminacy Channel (I): Uncertainty</h3>
+<h4 id="purpose">1. Purpose</h4>
+<p>Capture <strong>ambiguity</strong> not purely due to residual magnitude: - Measurement uncertainty - Censoring (below detection limit) - Spatial/temporal variability - Bootstrap instability</p>
+<h4 id="methods">2. Methods</h4>
+<p><strong>Method 1: Local Heterogeneity (Default)</strong></p>
+<p>For spatial/temporal data with neighborhood structure:</p>
+<p><span class="math display">$$I_{ij} = 1 - \exp\left(-\frac{\text{Var}(\mathcal{N}(i), j)}{\tau_j + \delta}\right)$$</span></p>
+<p><strong>Method 2: Censoring/Detection Limit</strong></p>
+<p><span class="math display">$$I_{ij} = \begin{cases}
+\iota_{\text{DL}} &amp; \text{if } X_{ij} &lt; \text{DL}_j \\
+0 &amp; \text{otherwise}
+\end{cases}$$</span></p>
+<p>where <span class="math inline"><em>ι</em><sub>DL</sub> ∈ (0, 1)</span> (default: 0.5).</p>
+<p><strong>Method 3: Uniform Small Indeterminacy</strong></p>
+<p><span class="math display"><em>I</em><sub><em>i</em><em>j</em></sub> = <em>ϵ</em></span></p>
+<p>for some small <span class="math inline"><em>ϵ</em> &gt; 0</span> (e.g., 0.01).</p>
+<h3 id="usage-example-1">Usage Example</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.encoder <span class="im">import</span> NDGEncoder, BaselineType, FalsityMap</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Option 1: Simple median baseline</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>encoder <span class="op">=</span> NDGEncoder(baseline_type<span class="op">=</span><span class="st">&quot;median&quot;</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>encoder.fit(X_std)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>triplets <span class="op">=</span> encoder.transform(X_std)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Option 2: Low-rank baseline</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>encoder <span class="op">=</span> NDGEncoder(</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    baseline_type<span class="op">=</span>BaselineType.LOW_RANK,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    baseline_rank<span class="op">=</span><span class="dv">3</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>triplets <span class="op">=</span> encoder.fit_transform(X_std)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Access components</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Truth shape: </span><span class="sc">{</span>triplets<span class="sc">.T.</span>shape<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Indeterminacy range: [</span><span class="sc">{</span>triplets<span class="sc">.I.</span><span class="bu">min</span>()<span class="sc">:.3f}</span><span class="ss">, </span><span class="sc">{</span>triplets<span class="sc">.I.</span><span class="bu">max</span>()<span class="sc">:.3f}</span><span class="ss">]&quot;</span>)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Falsity range: [</span><span class="sc">{</span>triplets<span class="sc">.F.</span><span class="bu">min</span>()<span class="sc">:.3f}</span><span class="ss">, </span><span class="sc">{</span>triplets<span class="sc">.F.</span><span class="bu">max</span>()<span class="sc">:.3f}</span><span class="ss">]&quot;</span>)</span></code></pre></div>
+<hr />
+<h2 id="pnpls-probabilistic-neutrosophic-pls">PNPLS: Probabilistic Neutrosophic PLS</h2>
+<p><strong>Module</strong>: <code>neutrohydro.model</code></p>
+<h3 id="overview-2">Overview</h3>
+<p>PNPLS extends Partial Least Squares (PLS) regression to <strong>neutrosophic triplet data</strong> <span class="math inline">(<em>T</em>, <em>I</em>, <em>F</em>)</span> by: 1. Constructing an <strong>augmented predictor space</strong> combining the three channels 2. Applying <strong>elementwise precision weights</strong> based on falsity 3. Fitting PLS via the <strong>NIPALS algorithm</strong> in this augmented Hilbert space</p>
+<h3 id="augmented-predictor-space">Augmented Predictor Space</h3>
+<h4 id="channel-concatenation">Channel Concatenation</h4>
+<p><span class="math display">$$X^{(\text{aug})} = \left[\, X_T \quad \sqrt{\rho_I} X_I \quad \sqrt{\rho_F} X_F \,\right] \in \mathbb{R}^{n \times 3p}$$</span></p>
+<p><strong>Channel weights</strong>: - <span class="math inline"><em>ρ</em><sub><em>T</em></sub> = 1</span> (Truth channel, always included) - <span class="math inline"><em>ρ</em><sub><em>I</em></sub> ≥ 0</span> (Indeterminacy weight, default: 1) - <span class="math inline"><em>ρ</em><sub><em>F</em></sub> ≥ 0</span> (Falsity weight, default: 1)</p>
+<h4 id="induced-inner-product">Induced Inner Product</h4>
+<p>The augmented space <span class="math inline">ℝ<sup>3<em>p</em></sup></span> has inner product:</p>
+<p><span class="math display">⟨<em>u</em>, <em>v</em>⟩<sub>𝒩</sub> = <em>u</em><sub><em>T</em></sub><sup>⊤</sup><em>v</em><sub><em>T</em></sub> + <em>ρ</em><sub><em>I</em></sub><em>u</em><sub><em>I</em></sub><sup>⊤</sup><em>v</em><sub><em>I</em></sub> + <em>ρ</em><sub><em>F</em></sub><em>u</em><sub><em>F</em></sub><sup>⊤</sup><em>v</em><sub><em>F</em></sub></span></p>
+<h3 id="precision-weighting">Precision Weighting</h3>
+<h4 id="elementwise-weights-from-falsity">Elementwise Weights from Falsity</h4>
+<p><span class="math display"><em>W</em><sub><em>i</em><em>j</em></sub> = exp ( − <em>λ</em><sub><em>F</em></sub> ⋅ <em>F</em><sub><em>i</em><em>j</em></sub>)</span></p>
+<p>where <span class="math inline"><em>λ</em><sub><em>F</em></sub> &gt; 0</span> controls downweighting strength.</p>
+<p><strong>Interpretation</strong>: - High falsity <span class="math inline"><em>F</em><sub><em>i</em><em>j</em></sub> ≈ 1</span> → low weight <span class="math inline"><em>W</em><sub><em>i</em><em>j</em></sub> ≈ exp ( − <em>λ</em><sub><em>F</em></sub>)</span> - Low falsity <span class="math inline"><em>F</em><sub><em>i</em><em>j</em></sub> ≈ 0</span> → high weight <span class="math inline"><em>W</em><sub><em>i</em><em>j</em></sub> ≈ 1</span></p>
+<h3 id="nipals-algorithm">NIPALS Algorithm</h3>
+<p><strong>Input</strong>: <span class="math inline"><em>X̃</em><sup>(aug)</sup> ∈ ℝ<sup><em>n</em> × 3<em>p</em></sup></span>, <span class="math inline"><em>y</em><sup>(std)</sup> ∈ ℝ<sup><em>n</em></sup></span>, <span class="math inline"><em>k</em></span> components</p>
+<p><strong>Output</strong>: Latent components <span class="math inline">(<em>T</em>, <em>W</em>, <em>P</em>, <em>q</em>, <em>β</em>)</span></p>
+<h4 id="component-extraction-for-h-1-k">Component Extraction (for h = 1, …, k)</h4>
+<ol type="1">
+<li><p>Initialize weight vector: <span class="math inline">$w_h = \frac{X_{\text{deflated}}^\top y_{\text{deflated}}}{\|X_{\text{deflated}}^\top y_{\text{deflated}}\|}$</span></p></li>
+<li><p>Iterative refinement (until convergence):</p>
+<ul>
+<li>Compute score: <span class="math inline"><em>t</em><sub><em>h</em></sub> = <em>X</em><sub>deflated</sub><em>w</em><sub><em>h</em></sub>/∥<em>X</em><sub>deflated</sub><em>w</em><sub><em>h</em></sub>∥</span></li>
+<li>Update weight: <span class="math inline"><em>w</em><sub><em>h</em></sub> = <em>X</em><sub>deflated</sub><sup>⊤</sup><em>t</em><sub><em>h</em></sub>/∥<em>X</em><sub>deflated</sub><sup>⊤</sup><em>t</em><sub><em>h</em></sub>∥</span></li>
+</ul></li>
+<li><p>Final score and loadings:</p>
+<ul>
+<li><span class="math inline"><em>t</em><sub><em>h</em></sub> = <em>X</em><sub>deflated</sub><em>w</em><sub><em>h</em></sub></span></li>
+<li><span class="math inline"><em>p</em><sub><em>h</em></sub> = <em>X</em><sub>deflated</sub><sup>⊤</sup><em>t</em><sub><em>h</em></sub>/(<em>t</em><sub><em>h</em></sub><sup>⊤</sup><em>t</em><sub><em>h</em></sub>)</span></li>
+<li><span class="math inline"><em>q</em><sub><em>h</em></sub> = <em>y</em><sub>deflated</sub><sup>⊤</sup><em>t</em><sub><em>h</em></sub>/(<em>t</em><sub><em>h</em></sub><sup>⊤</sup><em>t</em><sub><em>h</em></sub>)</span></li>
+</ul></li>
+<li><p>Deflation:</p>
+<ul>
+<li><span class="math inline"><em>X</em><sub>deflated</sub> ← <em>X</em><sub>deflated</sub> − <em>t</em><sub><em>h</em></sub><em>p</em><sub><em>h</em></sub><sup>⊤</sup></span></li>
+<li><span class="math inline"><em>y</em><sub>deflated</sub> ← <em>y</em><sub>deflated</sub> − <em>t</em><sub><em>h</em></sub><em>q</em><sub><em>h</em></sub></span></li>
+</ul></li>
+</ol>
+<h3 id="regression-coefficients">Regression Coefficients</h3>
+<p>After extracting <span class="math inline"><em>k</em></span> components:</p>
+<p><span class="math display"><em>β</em> = <em>W</em>(<em>P</em><sup>⊤</sup><em>W</em>)<sup> − 1</sup><em>q</em></span></p>
+<h3 id="usage-example-2">Usage Example</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.model <span class="im">import</span> PNPLS</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> PNPLS(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    n_components<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    rho_I<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    rho_F<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    lambda_F<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    tol<span class="op">=</span><span class="fl">1e-6</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    max_iter<span class="op">=</span><span class="dv">500</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit on triplets and target</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>model.fit(triplets, y_std)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Predictions</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>y_pred_std <span class="op">=</span> model.predict(triplets)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Score (R²)</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>r2 <span class="op">=</span> model.score(triplets, y_std)</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;R² = </span><span class="sc">{r2:.4f}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<hr />
+<h2 id="nvip-neutrosophic-variable-importance-in-projection">NVIP: Neutrosophic Variable Importance in Projection</h2>
+<p><strong>Module</strong>: <code>neutrohydro.nvip</code></p>
+<h3 id="overview-3">Overview</h3>
+<p>NVIP extends the classical VIP (Variable Importance in Projection) metric to <strong>neutrosophic triplet data</strong>, enabling <strong>L2-additive decomposition</strong> of variable importance across Truth, Indeterminacy, and Falsity channels.</p>
+<p><strong>Core Innovation</strong>: Variable importance can be <strong>unambiguously partitioned</strong> into baseline and perturbation components.</p>
+<h3 id="l2-decomposition-theorem">L2 Decomposition Theorem</h3>
+<p><strong>Theorem</strong> (NVIP L2 Additivity):</p>
+<p>For each variable <span class="math inline"><em>j</em> = 1, …, <em>p</em></span>:</p>
+<p><span class="math display">$$\boxed{\text{VIP}_{\text{agg}}^2(j) = \text{VIP}_T^2(j) + \text{VIP}_I^2(j) + \text{VIP}_F^2(j)}$$</span></p>
+<h3 id="channel-energies">Channel Energies</h3>
+<ul>
+<li><strong><span class="math inline"><em>E</em><sub><em>T</em></sub>(<em>j</em>)</span></strong>: Importance of <strong>baseline</strong> (Truth) for ion <span class="math inline"><em>j</em></span></li>
+<li><strong><span class="math inline"><em>E</em><sub><em>I</em></sub>(<em>j</em>)</span></strong>: Importance of <strong>uncertainty</strong> (Indeterminacy) for ion <span class="math inline"><em>j</em></span></li>
+<li><strong><span class="math inline"><em>E</em><sub><em>F</em></sub>(<em>j</em>)</span></strong>: Importance of <strong>perturbation</strong> (Falsity) for ion <span class="math inline"><em>j</em></span></li>
+</ul>
+<p><strong>Perturbation energy</strong>:</p>
+<p><span class="math display"><em>E</em><sub><em>P</em></sub>(<em>j</em>) = <em>E</em><sub><em>I</em></sub>(<em>j</em>) + <em>E</em><sub><em>F</em></sub>(<em>j</em>)</span></p>
+<h3 id="attribution-fractions">Attribution Fractions</h3>
+<p>For ion <span class="math inline"><em>j</em></span>, <strong>baseline fraction</strong>:</p>
+<p><span class="math display">$$\pi_G(j) = \frac{E_T(j)}{E_T(j) + E_P(j)} \in [0, 1]$$</span></p>
+<p><strong>Perturbation fraction</strong>:</p>
+<p><span class="math display">$$\pi_A(j) = 1 - \pi_G(j) = \frac{E_P(j)}{E_T(j) + E_P(j)}$$</span></p>
+<h3 id="usage-example-3">Usage Example</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro <span class="im">import</span> PNPLS, compute_nvip, verify_l2_decomposition</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.nvip <span class="im">import</span> nvip_to_dataframe</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit model</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> PNPLS(n_components<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>model.fit(triplets, y_std)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute NVIP</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>nvip <span class="op">=</span> compute_nvip(model)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify L2 decomposition</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> verify_l2_decomposition(nvip)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify important ions</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>important <span class="op">=</span> nvip.VIP_agg <span class="op">&gt;=</span> <span class="dv">1</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Important ions: </span><span class="sc">{np.</span>where(important)[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert to DataFrame</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> nvip_to_dataframe(nvip, feature_names<span class="op">=</span>ion_names)</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.sort_values(<span class="st">&#39;VIP_agg&#39;</span>, ascending<span class="op">=</span><span class="va">False</span>))</span></code></pre></div>
+<hr />
+<h2 id="attribution-metrics-nsr-and-baseline-fractions">Attribution Metrics: NSR and Baseline Fractions</h2>
+<p><strong>Module</strong>: <code>neutrohydro.attribution</code></p>
+<h3 id="overview-4">Overview</h3>
+<p>Attribution metrics quantify the <strong>baseline vs. perturbation</strong> character of ions and samples based on NVIP energies. Two levels of attribution:</p>
+<ol type="1">
+<li><strong>Ion-level</strong>: NSR and π_G quantify baseline fraction per ion</li>
+<li><strong>Sample-level</strong>: G_i quantifies baseline fraction per water sample</li>
+</ol>
+<h3 id="mathematical-foundation-1">Mathematical Foundation</h3>
+<h4 id="ion-level-attribution">Ion-Level Attribution</h4>
+<p><strong>Energy Partition</strong>:</p>
+<p><strong>Truth energy</strong> (baseline): <span class="math display"><em>E</em><sub><em>T</em></sub>(<em>j</em>) = VIP<sub><em>T</em></sub><sup>2</sup>(<em>j</em>)</span></p>
+<p><strong>Perturbation energy</strong>: <span class="math display"><em>E</em><sub><em>P</em></sub>(<em>j</em>) = <em>E</em><sub><em>I</em></sub>(<em>j</em>) + <em>E</em><sub><em>F</em></sub>(<em>j</em>) = VIP<sub><em>I</em></sub><sup>2</sup>(<em>j</em>) + VIP<sub><em>F</em></sub><sup>2</sup>(<em>j</em>)</span></p>
+<h4 id="baseline-fraction-π_g">Baseline Fraction π_G</h4>
+<p><span class="math display">$$\boxed{\pi_G(j) = \frac{E_T(j)}{E_T(j) + E_P(j)} \in [0, 1]}$$</span></p>
+<p><strong>Interpretation</strong>: - <span class="math inline"><em>π</em><sub><em>G</em></sub>(<em>j</em>) ≈ 1</span>: Ion <span class="math inline"><em>j</em></span> prediction driven by <strong>baseline</strong> - <span class="math inline"><em>π</em><sub><em>G</em></sub>(<em>j</em>) ≈ 0</span>: Ion <span class="math inline"><em>j</em></span> prediction driven by <strong>perturbation</strong> - <span class="math inline"><em>π</em><sub><em>G</em></sub>(<em>j</em>) ≈ 0.5</span>: Mixed contribution</p>
+<h4 id="neutrosophic-source-ratio-nsr">Neutrosophic Source Ratio (NSR)</h4>
+<p><span class="math display">$$\boxed{\text{NSR}(j) = \frac{E_T(j) + \epsilon}{E_P(j) + \epsilon}}$$</span></p>
+<p>where <span class="math inline"><em>ϵ</em> &gt; 0</span> (default: <span class="math inline">10<sup> − 10</sup></span>) prevents division by zero.</p>
+<p><strong>Interpretation</strong>: - NSR<span class="math inline">(<em>j</em>) ≫ 1</span>: Baseline-dominant - NSR<span class="math inline">(<em>j</em>) ≈ 1</span>: Balanced - NSR<span class="math inline">(<em>j</em>) ≪ 1</span>: Perturbation-dominant</p>
+<p><strong>Relationship to π_G</strong>:</p>
+<p><span class="math display">$$\pi_G(j) = \frac{\text{NSR}(j)}{1 + \text{NSR}(j)}$$</span></p>
+<h4 id="sample-level-attribution">Sample-Level Attribution</h4>
+<p>For sample <span class="math inline"><em>i</em></span>, the <strong>net contribution</strong> to prediction is:</p>
+<p><span class="math display"><em>c</em><sub><em>i</em><em>j</em></sub> = (<em>X̃</em><sub><em>T</em></sub>)<sub><em>i</em><em>j</em></sub><em>β</em><sub><em>T</em></sub>(<em>j</em>) + (<em>X̃</em><sub><em>I</em></sub>)<sub><em>i</em><em>j</em></sub><em>β</em><sub><em>I</em></sub>(<em>j</em>) + (<em>X̃</em><sub><em>F</em></sub>)<sub><em>i</em><em>j</em></sub><em>β</em><sub><em>F</em></sub>(<em>j</em>)</span></p>
+<h4 id="sample-baseline-fraction-g_i">Sample Baseline Fraction G_i</h4>
+<p><span class="math display">$$\boxed{G_i = \frac{\sum_{j=1}^p \pi_G(j) \cdot w_{ij}}{\sum_{j=1}^p w_{ij}} \in [0, 1]}$$</span></p>
+<p><strong>Weighted average</strong> of ion-level baseline fractions, using attribution masses as weights.</p>
+<p><strong>Interpretation</strong>: - <span class="math inline"><em>G</em><sub><em>i</em></sub> ≈ 1</span>: Sample <span class="math inline"><em>i</em></span> prediction driven by baseline-dominant ions - <span class="math inline"><em>G</em><sub><em>i</em></sub> ≈ 0</span>: Sample <span class="math inline"><em>i</em></span> prediction driven by perturbation-dominant ions - <span class="math inline"><em>G</em><sub><em>i</em></sub> ≈ 0.5</span>: Mixed</p>
+<hr />
+<h2 id="mineral-stoichiometric-inversion">Mineral Stoichiometric Inversion</h2>
+<p><strong>Module</strong>: <code>neutrohydro.minerals</code></p>
+<h3 id="overview-5">Overview</h3>
+<p>The mineral inference module uses <strong>stoichiometric inversion</strong> to estimate plausible mineral contributions from ion concentration data. This provides a <strong>geochemical interpretation</strong> of water composition in terms of <strong>mineral dissolution/weathering</strong> sources.</p>
+<p><strong>Key innovation</strong>: Uses baseline fractions <span class="math inline"><em>π</em><sub><em>G</em></sub></span> to <strong>weight ions</strong>, emphasizing baseline-dominant ions in the inversion.</p>
+<h3 id="stoichiometric-model">Stoichiometric Model</h3>
+<h4 id="forward-model">Forward Model</h4>
+<p>Ion concentrations arise from <strong>mineral dissolution</strong>:</p>
+<p><span class="math display"><em>c</em> = <em>A</em><em>s</em> + <em>r</em></span></p>
+<p>where: - <span class="math inline"><em>c</em> ∈ ℝ<sup><em>m</em></sup></span>: Observed ion concentrations (in <strong>meq/L</strong>, recommended) - <span class="math inline"><em>A</em> ∈ ℝ<sup><em>m</em> × <em>K</em></sup></span>: <strong>Stoichiometric matrix</strong> (mineral compositions) - <span class="math inline"><em>s</em> ∈ ℝ<sub> ≥ 0</sub><sup><em>K</em></sup></span>: <strong>Mineral contributions</strong> (non-negative) - <span class="math inline"><em>r</em> ∈ ℝ<sup><em>m</em></sup></span>: <strong>Residual</strong> (unmodeled processes)</p>
+<h3 id="weighted-nnls-neutrohydro-innovation">Weighted NNLS (NeutroHydro Innovation)</h3>
+<p>Use baseline fractions <span class="math inline"><em>π</em><sub><em>G</em></sub></span> to <strong>emphasize baseline-dominant ions</strong>:</p>
+<p><span class="math display"><em>ŝ</em> = arg min<sub><em>s</em> ≥ 0</sub>∥<em>D</em>(<em>c</em> − <em>A</em><em>s</em>)∥<sup>2</sup></span></p>
+<p>where <span class="math inline"><em>D</em> = diag(<em>d</em><sub>1</sub>, …, <em>d</em><sub><em>m</em></sub>)</span> and:</p>
+<p><span class="math display"><em>d</em><sub>ℓ</sub> = <em>π</em><sub><em>G</em></sub>(ion<sub>ℓ</sub>)<sup><em>η</em></sup></span></p>
+<p><strong>Hyperparameters</strong>: - <span class="math inline"><em>η</em> ≥ 1</span>: Weighting exponent (default: 1.0)</p>
+<p><strong>Rationale</strong>: Baseline-dominant ions reflect <strong>natural geochemical processes</strong> (mineral weathering), while perturbation-dominant ions may reflect <strong>anthropogenic inputs</strong> (fertilizers, contamination, ion exchange) not modeled by simple dissolution.</p>
+<h3 id="standard-mineral-library">Standard Mineral Library</h3>
+<p>NeutroHydro includes an expanded “Scientific Research Grade” library of <strong>24 minerals/endmembers</strong>, covering silicates, carbonates, evaporites, and specific anthropogenic markers.</p>
+<h4 id="natural-minerals-geogenic">Natural Minerals (Geogenic)</h4>
+<table>
+<thead>
+<tr class="header">
+<th>Mineral</th>
+<th>Formula</th>
+<th>Key Ions</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Calcite</strong></td>
+<td>CaCO₃</td>
+<td>Ca²⁺, HCO₃⁻</td>
+<td>Carbonate dissolution</td>
+</tr>
+<tr class="even">
+<td><strong>Dolomite</strong></td>
+<td>CaMg(CO₃)₂</td>
+<td>Ca²⁺, Mg²⁺, HCO₃⁻</td>
+<td>Carbonate dissolution</td>
+</tr>
+<tr class="odd">
+<td><strong>Gypsum</strong></td>
+<td>CaSO₄·2H₂O</td>
+<td>Ca²⁺, SO₄²⁻</td>
+<td>Sulfate dissolution</td>
+</tr>
+<tr class="even">
+<td><strong>Halite</strong></td>
+<td>NaCl</td>
+<td>Na⁺, Cl⁻</td>
+<td>Saline deposits/intrusion</td>
+</tr>
+<tr class="odd">
+<td><strong>Sylvite</strong></td>
+<td>KCl</td>
+<td>K⁺, Cl⁻</td>
+<td>Potash deposits</td>
+</tr>
+<tr class="even">
+<td><strong>K-feldspar</strong></td>
+<td>KAlSi₃O₈</td>
+<td>K⁺, HCO₃⁻</td>
+<td>Orthoclase weathering</td>
+</tr>
+<tr class="odd">
+<td><strong>Albite</strong></td>
+<td>NaAlSi₃O₈</td>
+<td>Na⁺, HCO₃⁻</td>
+<td>Plagioclase weathering</td>
+</tr>
+<tr class="even">
+<td><strong>Anorthite</strong></td>
+<td>CaAl₂Si₂O₈</td>
+<td>Ca²⁺, HCO₃⁻</td>
+<td>Plagioclase weathering</td>
+</tr>
+</tbody>
+</table>
+<h4 id="anthropogenic-markers-pollution-proxies">Anthropogenic Markers (Pollution Proxies)</h4>
+<table>
+<thead>
+<tr class="header">
+<th>Marker</th>
+<th>Formula</th>
+<th>Key Ions</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Niter</strong></td>
+<td>KNO₃</td>
+<td>K⁺, NO₃⁻</td>
+<td>Potassium-based fertilizers</td>
+</tr>
+<tr class="even">
+<td><strong>Soda Niter</strong></td>
+<td>NaNO₃</td>
+<td>Na⁺, NO₃⁻</td>
+<td>Sodium-based fertilizers or wastewater</td>
+</tr>
+<tr class="odd">
+<td><strong>Nitrocalcite</strong></td>
+<td>Ca(NO₃)₂</td>
+<td>Ca²⁺, NO₃⁻</td>
+<td>Calcium nitrate fertilizers</td>
+</tr>
+</tbody>
+</table>
+<h3 id="unit-conversion">Unit Conversion</h3>
+<h4 id="mgl-to-meql">mg/L to meq/L</h4>
+<p><span class="math display">$$\text{meq/L} = \frac{\text{mg/L}}{M} \times |z|$$</span></p>
+<p>where: - <span class="math inline"><em>M</em></span> = molar mass (g/mol) - <span class="math inline">|<em>z</em>|</span> = absolute charge</p>
+<p><strong>Example</strong> (Ca²⁺): - Molar mass = 40.078 g/mol - Charge = +2 - 100 mg/L Ca²⁺ = <span class="math inline">$\frac{100}{40.078} \times 2 = 4.99$</span> meq/L</p>
+<h3 id="usage-example-4">Usage Example</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.minerals <span class="im">import</span> MineralInverter, convert_to_meq</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.quality_check <span class="im">import</span> add_quality_flags</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Load and Assess Quality</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data.csv&quot;</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>df_quality <span class="op">=</span> add_quality_flags(df)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>quality_flags <span class="op">=</span> df_quality.to_dict(<span class="st">&#39;records&#39;</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Convert ion data to meq/L</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.minerals <span class="im">import</span> ION_MASSES, ION_CHARGES</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># ... (conversion logic) ...</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Create inverter</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>inverter <span class="op">=</span> MineralInverter()</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Invert with Quality Constraints</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> inverter.invert(</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    c_meq, </span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    use_cai_constraints<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    use_gibbs_constraints<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    quality_flags<span class="op">=</span>quality_flags  <span class="co"># &lt;--- Context-aware override</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Access results</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Simpson Class: </span><span class="sc">{</span>result<span class="sc">.</span>indices[<span class="st">&#39;Simpson_Class&#39;</span>]<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Inferred Sources: </span><span class="sc">{</span>df_quality[<span class="st">&#39;Inferred_Sources&#39;</span>]<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<hr />
+<h2 id="water-quality-assessment">Water Quality Assessment</h2>
+<p><strong>Module</strong>: <code>neutrohydro.quality_check</code></p>
+<h3 id="overview-6">Overview</h3>
+<p>The Quality Assessment module provides an automated system for evaluating groundwater samples against <strong>WHO (World Health Organization)</strong> drinking water guidelines. Beyond simple compliance checking, it implements an <strong>intelligent source inference</strong> engine that interprets combinations of exceedances to suggest potential pollution origins.</p>
+<h3 id="features">Features</h3>
+<ol type="1">
+<li><strong>WHO Compliance Check</strong>: Automatically flags parameters exceeding standard limits.</li>
+<li><strong>Source Inference</strong>: Uses hydrogeochemical logic to infer the likely cause of contamination (e.g., Saline Intrusion vs. Anthropogenic Pollution).</li>
+<li><strong>Integration</strong>: Can be used as a standalone tool or to provide <strong>context-aware constraints</strong> for the Mineral Inversion model.</li>
+</ol>
+<h3 id="thresholds">Thresholds</h3>
+<p>The module uses standard WHO guideline values (mg/L):</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>TDS</strong></td>
+<td style="text-align: left;">1000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>pH</strong></td>
+<td style="text-align: left;">6.5 - 8.5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Na</strong></td>
+<td style="text-align: left;">200</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Cl</strong></td>
+<td style="text-align: left;">250</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>SO4</strong></td>
+<td style="text-align: left;">250</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>NO3</strong></td>
+<td style="text-align: left;">50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>F</strong></td>
+<td style="text-align: left;">1.5</td>
+</tr>
+</tbody>
+</table>
+<h3 id="source-inference-rules">Source Inference Rules</h3>
+<h4 id="saline-intrusion">Saline Intrusion</h4>
+<ul>
+<li><strong>Trigger</strong>: High Chloride (<span class="math inline"><em>C</em><em>l</em> &gt; 250</span>) <strong>AND</strong> High Sodium (<span class="math inline"><em>N</em><em>a</em> &gt; 200</span>).</li>
+<li><strong>Inference</strong>: “Saline Intrusion/Brine”.</li>
+<li><strong>Implication</strong>: Suggests seawater mixing or deep brine upwelling.</li>
+</ul>
+<h4 id="anthropogenic-pollution">Anthropogenic Pollution</h4>
+<ul>
+<li><strong>Trigger</strong>: High Nitrate (<span class="math inline"><em>N</em><em>O</em><sub>3</sub> &gt; 50</span>).</li>
+<li><strong>Inference</strong>: “Anthropogenic (Agri/Sewage)”.</li>
+<li><strong>Implication</strong>: Surface contamination from fertilizers or wastewater.</li>
+</ul>
+<h4 id="geogenic-rock-water-interaction">Geogenic (Rock-Water Interaction)</h4>
+<ul>
+<li><strong>Trigger</strong>: High Fluoride (<span class="math inline"><em>F</em> &gt; 1.5</span>) or High Calcium/Sulfate (Gypsum).</li>
+<li><strong>Inference</strong>: “Geogenic (Rock-Water)”.</li>
+<li><strong>Implication</strong>: Natural weathering of specific mineral formations.</li>
+</ul>
+<h3 id="usage">Usage</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.quality_check <span class="im">import</span> add_quality_flags</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Data</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;data.csv&quot;</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run Assessment</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>df_report <span class="op">=</span> add_quality_flags(df)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># View Results</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_report[[<span class="st">&#39;Code&#39;</span>, <span class="st">&#39;Exceedances&#39;</span>, <span class="st">&#39;Inferred_Sources&#39;</span>]])</span></code></pre></div>
+<hr />
+<h2 id="model-limitations-and-validity">Model Limitations and Validity</h2>
+<p><strong>Module</strong>: <code>neutrohydro</code></p>
+<h3 id="overview-7">Overview</h3>
+<p>While NeutroHydro provides a mathematically rigorous framework for groundwater chemometrics, it is subject to inherent limitations common to inverse geochemical modeling and statistical learning.</p>
+<h3 id="stoichiometric-assumptions">Stoichiometric Assumptions</h3>
+<p><strong>Limitation</strong>: The Mineral Inversion module relies on a library of fixed stoichiometric formulas (e.g., Calcite = CaCO₃).</p>
+<p><strong>Reality</strong>: Natural minerals often exist as solid solutions or have impurities.</p>
+<p><strong>Addressing Validity</strong>: - <strong>Residual Analysis</strong>: High residuals indicate standard library cannot fully explain the water chemistry. - <strong>Endmember Expansion</strong>: Include pure endmembers (e.g., Albite and Anorthite) to approximate solid solutions.</p>
+<h3 id="non-uniqueness-of-inversion">Non-Uniqueness of Inversion</h3>
+<p><strong>Limitation</strong>: The problem of reconstructing mineral assemblages from dissolved ions is mathematically <strong>underdetermined</strong> or <strong>non-unique</strong>.</p>
+<p><strong>Example</strong>: Dissolved Ca²⁺ and SO₄²⁻ could come from Gypsum or Anhydrite. Chemically, they produce identical ions.</p>
+<p><strong>Addressing Validity</strong>: - <strong>Parsimony Principle</strong>: NNLS favors sparse solutions. - <strong>Contextual Validation</strong>: User must validate if identified minerals make geological sense. - <strong>Thermodynamic Consistency</strong>: Cross-reference with Saturation Indices (external validation).</p>
+<h3 id="linearity-of-baseline-pcapls">Linearity of Baseline (PCA/PLS)</h3>
+<p><strong>Limitation</strong>: The NDG Encoder and PNPLS use linear projections to define the “Baseline”.</p>
+<p><strong>Reality</strong>: Natural geochemical evolution can be highly non-linear (redox fronts, sorption isotherms).</p>
+<p><strong>Addressing Validity</strong>: - <strong>Neutrosophic Compensation</strong>: The <span class="math inline"><em>I</em></span> and <span class="math inline"><em>F</em></span> channels capture non-linear deviations from the linear baseline. - <strong>Interpretation</strong>: High <span class="math inline"><em>I</em></span> or <span class="math inline"><em>F</em></span> score often signifies a non-linear geochemical process.</p>
+<h3 id="data-completeness-missing-ions">Data Completeness (Missing Ions)</h3>
+<p><strong>Limitation</strong>: Geochemical inversion requires charge balance. Missing major ions makes it impossible to distinguish certain minerals.</p>
+<p><strong>Addressing Validity</strong>: - <strong>Adaptive Filtering</strong>: The model dynamically removes minerals requiring missing ions from the candidate list.</p>
+<h3 id="closed-system-assumption">“Closed System” Assumption</h3>
+<p><strong>Limitation</strong>: Mass balance inversion assumes ions come solely from mineral dissolution/precipitation.</p>
+<p><strong>Reality</strong>: Groundwater is an open system. Ions can be added via rainfall, evaporation, or anthropogenic inputs.</p>
+<p><strong>Addressing Validity</strong>: - <strong>Anthropogenic Markers</strong>: Explicitly include “Pollution Proxies” (e.g., Niter, Nitrocalcite) in the library. - <strong>Evaporation Handling</strong>: Use conservative ions (Cl, Br) in the baseline to track physical concentration effects.</p>
+<hr />
+<h2 id="hydrogeochemical-processes-in-neutrohydro">Hydrogeochemical Processes in NeutroHydro</h2>
+<p><strong>Module</strong>: <code>neutrohydro</code></p>
+<p>This document explains how specific hydrogeochemical processes (Mixing, Salinization, Ion Exchange, Redox) are mathematically represented within the NeutroHydro framework.</p>
+<h3 id="mixing-and-salinization">1. Mixing and Salinization</h3>
+<p><strong>Process</strong>: The physical mixing of two or more distinct water bodies (e.g., fresh recharge + saline connate water).</p>
+<p><strong>Mathematical Nature</strong>: Linear.</p>
+<p><strong>Model Representation</strong>: <strong>Truth (<span class="math inline"><em>T</em></span>) Channel</strong>.</p>
+<p>The <strong>NDG Encoder</strong> uses Robust PCA (or Low-Rank Approximation) to define the “Truth” baseline. - The Principal Components (PCs) of the <span class="math inline"><em>T</em></span> channel naturally align with the <strong>Mixing Lines</strong>. - <strong>Salinization</strong> (e.g., Seawater Intrusion) typically appears as the <strong>First Principal Component (PC1)</strong> because it explains the largest variance in total dissolved solids (TDS). - <strong>Validity</strong>: Since mixing is a linear operation, the linear algebra underlying the <span class="math inline"><em>T</em></span> channel is mathematically valid for these processes.</p>
+<h3 id="ion-exchange">2. Ion Exchange</h3>
+<p><strong>Process</strong>: The adsorption of one ion onto a clay surface and the release of another (e.g., <span class="math inline"><em>C</em><em>a</em><sup>2+</sup></span> adsorbs, <span class="math inline">2<em>N</em><em>a</em><sup>+</sup></span> releases).</p>
+<p><strong>Mathematical Nature</strong>: Non-linear / Non-conservative relative to the mixing line.</p>
+<p><strong>Model Representation</strong>: <strong>Indeterminacy (<span class="math inline"><em>I</em></span>) and Falsity (<span class="math inline"><em>F</em></span>) Channels</strong>.</p>
+<p>Ion exchange creates a deviation from the linear mixing trend defined in <span class="math inline"><em>T</em></span>. - In simple mixing, if <span class="math inline"><em>C</em><em>l</em><sup>−</sup></span> increases, <span class="math inline"><em>N</em><em>a</em><sup>+</sup></span> should increase proportionally. - If Ion Exchange occurs, <span class="math inline"><em>N</em><em>a</em><sup>+</sup></span> increases more than expected, while <span class="math inline"><em>C</em><em>a</em><sup>2+</sup></span> increases less. - The model captures this deviation in the <strong>Falsity (<span class="math inline"><em>F</em></span>)</strong> matrix.</p>
+<h3 id="redox-processes-denitrification-sulfate-reduction">3. Redox Processes (Denitrification, Sulfate Reduction)</h3>
+<p><strong>Process</strong>: Biogeochemical removal of species (e.g., <span class="math inline"><em>N</em><em>O</em><sub>3</sub><sup>−</sup> → <em>N</em><sub>2</sub>(<em>g</em>)</span>) or addition (Nitrification).</p>
+<p><strong>Mathematical Nature</strong>: Mass loss (Sink) or Gain (Source).</p>
+<p><strong>Model Representation</strong>: <strong>Falsity (<span class="math inline"><em>F</em></span>)</strong> and <strong>Redox Phases</strong>.</p>
+<p>These processes look like “missing mass” relative to the conservative baseline. - A high Falsity score for Nitrate (<span class="math inline"><em>F</em><sub><em>N</em><em>O</em>3</sub></span>) combined with a low Truth value indicates depletion. - The <span class="math inline"><em>F</em></span> channel provides the statistical evidence of the process.</p>
+<hr />
+<h2 id="mathematical-critique-of-neutrohydro-model">Mathematical Critique of NeutroHydro Model</h2>
+<p><strong>Date</strong>: December 28, 2025</p>
+<p>This document provides a critical mathematical review of the NeutroHydro framework, identifying potential limitations and proposing rigorous solutions.</p>
+<h3 id="the-weighting-paradox-in-mineral-inversion">1. The “Weighting Paradox” in Mineral Inversion</h3>
+<p><strong>Issue</strong>: The current <code>MineralInverter</code> minimizes the weighted norm:</p>
+<p><span class="math display">min<sub><em>s</em> ≥ 0</sub>∥<em>D</em> ⋅ (<em>c</em> − <em>A</em><em>s</em>)∥<sub>2</sub><sup>2</sup></span></p>
+<p>where the weights <span class="math inline"><em>D</em></span> are derived from the Baseline Fraction <span class="math inline"><em>π</em><sub><em>G</em></sub></span>.</p>
+<p><strong>Logic</strong>: Trust the “Baseline” ions more; downweight the “Perturbed/Noisy” ions.</p>
+<p><strong>Consequence</strong>: Anthropogenic markers (e.g., Nitrate from fertilizer) are often <strong>perturbations</strong> (High <span class="math inline"><em>F</em></span>, Low <span class="math inline"><em>π</em><sub><em>G</em></sub></span>).</p>
+<p><strong>The Paradox</strong>: By downweighting the perturbation, the solver is told “It is okay to ignore Nitrate.”</p>
+<p><strong>Result</strong>: The model may underestimate anthropogenic pollution.</p>
+<p><strong>Mathematical Solution</strong>: For <strong>Forensic Analysis</strong> (identifying pollution), the weighting scheme should be inverted or removed: 1. <strong>Unweighted Inversion</strong>: Set <span class="math inline"><em>D</em> = <em>I</em></span> (Identity). Force the model to explain <em>all</em> ions. 2. <strong>Targeted Weighting</strong>: Set high weights for suspected markers (e.g., <span class="math inline"><em>D</em><sub><em>N</em><em>O</em>3</sub> = 1.0</span>) regardless of their <span class="math inline"><em>π</em><sub><em>G</em></sub></span> score.</p>
+<h3 id="mixing-vs.-mineral-dissolution">2. Mixing vs. Mineral Dissolution</h3>
+<p><strong>Issue</strong>: The NNLS solver assumes all solutes come from dissolving solid phases.</p>
+<p><strong>Reality</strong>: Groundwater often involves <strong>Mixing</strong> with a pre-existing brine (e.g., Seawater).</p>
+<p><strong>Approximation</strong>: Seawater is approximated as a sum of <code>Halite</code> + <code>Sylvite</code> + <code>Gypsum</code> + …</p>
+<p><strong>Critique</strong>: This loses the <strong>Constant Proportion</strong> constraint of Seawater (e.g., <span class="math inline"><em>C</em><em>l</em>/<em>B</em><em>r</em></span> ratio).</p>
+<p><strong>Mathematical Solution</strong>: Add <strong>Fluid Endmembers</strong> to the Stoichiometric Matrix <span class="math inline"><em>A</em></span>: - Define a “mineral” called <code>Seawater</code> with exact ionic composition of standard seawater. - <span class="math display"><em>A</em><sub><em>S</em><em>e</em><em>a</em><em>w</em><em>a</em><em>t</em><em>e</em><em>r</em></sub> = [<em>N</em><em>a</em> = 468, <em>M</em><em>g</em> = 53, <em>C</em><em>a</em> = 10, <em>C</em><em>l</em> = 545, <em>S</em><em>O</em>4 = 28, ...]</span> - This forces the solver to use the <em>exact</em> seawater ratio.</p>
+<h3 id="non-uniqueness-of-ion-exchange">3. Non-Uniqueness of Ion Exchange</h3>
+<p><strong>Issue</strong>: Ion Exchange phases (e.g., <span class="math inline"><em>C</em><em>a</em> → 2<em>N</em><em>a</em></span>) increase <strong>Multicollinearity</strong>.</p>
+<p><strong>Scenario</strong>: - High Na, Low Ca. - <strong>Explanation A</strong>: Dissolve Halite + Precipitate Calcite. - <strong>Explanation B</strong>: Ion Exchange.</p>
+<p><strong>Solver Behavior</strong>: NNLS picks the path of least resistance. Cannot distinguish without isotopic data.</p>
+<p><strong>Mathematical Solution</strong>: Apply <strong>L2 (Ridge) or L1 (Lasso) penalties</strong> to Exchanger terms to ensure they are only selected when standard minerals cannot explain the data.</p>
+<h3 id="simpsons-ratio-discretization">4. Simpson’s Ratio Discretization</h3>
+<p><strong>Issue</strong>: The model uses discrete bins for Simpson’s Ratio (e.g., “Moderately Saline” vs “Highly Saline”).</p>
+<p><strong>Critique</strong>: Discretization throws away information. A sample at 2.7 is labeled “Moderately”, while 2.9 is “Highly”, despite being nearly identical.</p>
+<p><strong>Mathematical Solution</strong>: Use raw ratio values for downstream statistical analysis (correlation, clustering), and reserve discrete classes only for the final human-readable report.</p>
+<hr />
+<h2 id="final-critical-review-mathematical-hydrogeochemical-integrity">Final Critical Review: Mathematical &amp; Hydrogeochemical Integrity</h2>
+<p><strong>Date</strong>: December 28, 2025</p>
+<p>This document serves as the final “Red Team” critique of the NeutroHydro framework, evaluating its scientific validity.</p>
+<h3 id="the-hard-threshold-problem-in-cai-constraints">1. The “Hard Threshold” Problem in CAI Constraints</h3>
+<p><strong>Critique</strong>: The implementation uses a hard threshold (e.g., <code>CAI &gt; 0.05</code>) to switch between “Freshening” and “Intrusion” modes.</p>
+<p><strong>Mathematical Issue</strong>: This introduces a <strong>discontinuity</strong> in the model function. A sample with CAI=0.049 allows one set of minerals, while CAI=0.051 allows another.</p>
+<p><strong>Hydrogeochemical Reality</strong>: Natural systems are continuous. A sample near equilibrium might experience minor fluctuations.</p>
+<p><strong>Risk</strong>: Small measurement errors in Na or Cl could flip the switch, causing sudden jumps in predicted mineral assemblages (Instability).</p>
+<p><strong>Recommendation</strong>: - <strong>Soft Gating</strong>: Use a <strong>Sigmoid Weighting</strong> function. - Weight for <code>ReleaseNa</code> = <span class="math inline"><em>σ</em>( − <em>k</em> ⋅ CAI)</span> - This smoothly transitions the allowed mass of the exchanger phase to zero.</p>
+<h3 id="the-sink-asymmetry">2. The “Sink” Asymmetry</h3>
+<p><strong>Critique</strong>: NNLS (<span class="math inline"><em>s</em> ≥ 0</span>) is excellent for <strong>Dissolution</strong> but struggles with <strong>Precipitation</strong>.</p>
+<p><strong>Scenario</strong>: Calcite precipitation (<span class="math inline"><em>C</em><em>a</em><sup>2+</sup> + <em>C</em><em>O</em><sub>3</sub><sup>2−</sup> → <em>C</em><em>a</em><em>C</em><em>O</em><sub>3</sub></span>). This removes ions.</p>
+<p><strong>Model Behavior</strong>: The model cannot assign negative mass to “Calcite”. It can only model this if we explicitly define a “Precipitation” phase with negative stoichiometry.</p>
+<p><strong>Consequence</strong>: If water is supersaturated and precipitating calcite, the model will have a large <strong>Residual</strong>.</p>
+<p><strong>Recommendation</strong>: - <strong>Residual Interpretation</strong>: Explicitly document that <strong>Negative Residuals</strong> (Observed &lt; Predicted) imply precipitation or biological uptake.</p>
+<h3 id="thermodynamic-blindness">3. Thermodynamic Blindness</h3>
+<p><strong>Critique</strong>: NeutroHydro is a <strong>Mass Balance</strong> model, not a <strong>Thermodynamic</strong> model.</p>
+<p><strong>Issue</strong>: It can mathematically propose an impossible mineral assemblage (e.g., dissolved Anhydrite in water that is undersaturated with Gypsum but supersaturated with Anhydrite).</p>
+<p><strong>Missing Link</strong>: The model does not check <strong>Saturation Indices (SI)</strong>. It doesn’t know if water <em>can</em> dissolve the mineral.</p>
+<p><strong>Recommendation</strong>: - <strong>External Validation</strong>: For publication, results <em>must</em> be cross-referenced with PHREEQC or similar codes to ensure identified phases are not supersaturated.</p>
+<h3 id="conclusion-is-it-defensible">4. Conclusion: Is it Defensible?</h3>
+<p><strong>Yes</strong>, with caveats.</p>
+<p>The model is now <strong>mathematically superior</strong> to standard inverse models because: 1. <strong>It handles Uncertainty</strong>: The Neutrosophic (<span class="math inline"><em>I</em>, <em>F</em></span>) logic captures noise that breaks other models. 2. <strong>It is Constrained</strong>: The CAI and Gibbs logic removes egregious non-uniqueness errors. 3. <strong>It is Context-Aware</strong>: WHO integration ensures pollution sources are respected.</p>
+<p><strong>Final Verdict</strong>: The model is valid for <strong>Hypothesis Generation</strong> and <strong>Forensic Fingerprinting</strong>. It should not replace thermodynamic equilibrium modeling (PHREEQC) but complement it.</p>
+<hr />
+<h1 id="api-reference">API REFERENCE</h1>
+<h2 id="pipeline-api">Pipeline API</h2>
+<p>The <code>NeutroHydroPipeline</code> class orchestrates the entire workflow, from data loading to result generation.</p>
+<h3 id="class-reference">Class Reference</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> NeutroHydroPipeline:</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, target_ions: <span class="bu">list</span>[<span class="bu">str</span>], ...):</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co">        Initialize the pipeline.</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">        Args:</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">            target_ions: List of ions to model (e.g., [&#39;Ca&#39;, &#39;Mg&#39;, ...])</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">        &quot;&quot;&quot;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fit(<span class="va">self</span>, df: pd.DataFrame):</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">        Fit the internal models (Scaler, Encoder, PNPLS) to the data.</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co">        &quot;&quot;&quot;</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> analyze(<span class="va">self</span>, df: pd.DataFrame) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="co">        Run the full analysis on the provided data.</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co">        Returns:</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="co">            dict: A dictionary containing:</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="co">                - &#39;vip_scores&#39;: Variable Importance</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="co">                - &#39;mineral_fractions&#39;: Mineral inversion results</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="co">                - &#39;quality_flags&#39;: WHO assessment</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="co">                - &#39;indices&#39;: Hydrogeochemical indices</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="co">        &quot;&quot;&quot;</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
+<hr />
+<h2 id="core-modules-api">Core Modules API</h2>
+<h3 id="neutrohydro.encoder"><code>neutrohydro.encoder</code></h3>
+<p>Handles the Neutrosophic Data Transformation.</p>
+<ul>
+<li><strong><code>NDGEncoder</code></strong>: Transforms raw concentrations into Truth (T), Indeterminacy (I), and Falsity (F) components.</li>
+</ul>
+<h3 id="neutrohydro.minerals"><code>neutrohydro.minerals</code></h3>
+<p>Handles Stoichiometric Inversion.</p>
+<ul>
+<li><strong><code>MineralInverter</code></strong>: Performs weighted NNLS inversion to estimate mineral contributions.</li>
+<li><strong><code>calculate_simpson_ratio</code></strong>: Computes Standard and Inverse Simpson’s Ratios.</li>
+</ul>
+<h3 id="neutrohydro.quality_check"><code>neutrohydro.quality_check</code></h3>
+<p>Handles Water Quality Assessment.</p>
+<ul>
+<li><strong><code>assess_water_quality</code></strong>: Checks samples against WHO guidelines.</li>
+<li><strong><code>add_quality_flags</code></strong>: Adds quality columns to a DataFrame.</li>
+</ul>
+<h3 id="neutrohydro.nvip"><code>neutrohydro.nvip</code></h3>
+<p>Handles Variable Importance.</p>
+<ul>
+<li><strong><code>calculate_nvip</code></strong>: Computes Neutrosophic Variable Importance in Projection.</li>
+</ul>
+<hr />
+<h1 id="examples-tutorials">EXAMPLES &amp; TUTORIALS</h1>
+<h2 id="basic-examples">Basic Examples</h2>
+<p>For a complete walkthrough of the basic usage, please refer to the <a href="#quick-start-guide">Quick Start Guide</a>.</p>
+<h3 id="running-the-example-script">Running the Example Script</h3>
+<p>The repository includes a ready-to-run example script:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> examples/basic_example.py</span></code></pre></div>
+<p>This script demonstrates: 1. Creating synthetic data. 2. Initializing the pipeline. 3. Running the analysis. 4. Printing the results.</p>
+<hr />
+<h2 id="advanced-workflows">Advanced Workflows</h2>
+<h3 id="custom-mineral-libraries">Custom Mineral Libraries</h3>
+<p>You can define custom minerals for the inversion engine:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.minerals <span class="im">import</span> MineralInverter</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>custom_minerals <span class="op">=</span> {</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;MyMineral&quot;</span>: {</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;formula&quot;</span>: <span class="st">&quot;X2Y&quot;</span>,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;stoichiometry&quot;</span>: {<span class="st">&quot;X&quot;</span>: <span class="fl">2.0</span>, <span class="st">&quot;Y&quot;</span>: <span class="fl">1.0</span>},</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;description&quot;</span>: <span class="st">&quot;A custom phase&quot;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>inverter <span class="op">=</span> MineralInverter(minerals<span class="op">=</span>custom_minerals)</span></code></pre></div>
+<h3 id="handling-redox-processes">Handling Redox Processes</h3>
+<p>To explicitly model redox sinks (like Denitrification), include the <code>REDOX_PHASES</code> in your mineral library.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> neutrohydro.minerals <span class="im">import</span> STANDARD_MINERALS, REDOX_PHASES</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>combined_minerals <span class="op">=</span> {<span class="op">**</span>STANDARD_MINERALS, <span class="op">**</span>REDOX_PHASES}</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>inverter <span class="op">=</span> MineralInverter(minerals<span class="op">=</span>combined_minerals)</span></code></pre></div>
+<hr />
+<h2 id="interpreting-results">Interpreting Results</h2>
+<h3 id="understanding-the-outputs">Understanding the Outputs</h3>
+<h4 id="mineral-fractions">1. Mineral Fractions</h4>
+<p>These represent the relative contribution of each mineral to the total dissolved solids (TDS) of the sample.</p>
+<ul>
+<li><strong>Sum to 1</strong>: The fractions are normalized.</li>
+<li><strong>Interpretation</strong>: A high “Calcite” fraction indicates carbonate weathering is the dominant process.</li>
+</ul>
+<h4 id="quality-flags">2. Quality Flags</h4>
+<ul>
+<li><strong>Exceedances</strong>: Lists parameters that violate WHO guidelines.</li>
+<li><strong>Inferred Sources</strong>: Suggests potential origins (e.g., “Saline Intrusion”, “Agricultural”).</li>
+</ul>
+<h4 id="simpsons-ratio">3. Simpson’s Ratio</h4>
+<ul>
+<li><strong>Standard Ratio</strong>: Indicates severity of salinity.</li>
+<li><strong>Inverse Ratio</strong>: Distinguishes mechanism (Recharge vs. Intrusion).
+<ul>
+<li><strong>&gt; 1</strong>: Recharge (Fresh)</li>
+<li><strong>&lt; 0.5</strong>: Intrusion (Seawater)</li>
+</ul></li>
+</ul>
+<h4 id="vip-scores-variable-importance">4. VIP Scores (Variable Importance)</h4>
+<ul>
+<li><strong>T-VIP</strong>: Importance of the baseline trend (Mixing).</li>
+<li><strong>F-VIP</strong>: Importance of perturbations (Pollution/Exchange).</li>
+</ul>
+<hr />
+<h2 id="end-of-documentation">End of Documentation</h2>
+<p><strong>Generated</strong>: December 28, 2025</p>
+<p>For more information, visit the GitHub repository or consult the individual module documentation.</p>
+</body>
+</html>

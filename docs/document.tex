@@ -1,0 +1,1528 @@
+\documentclass[11pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Page geometry
+\geometry{
+	left=2.5cm,
+	right=2.5cm,
+	top=3cm,
+	bottom=3cm
+}
+
+% Headers and footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{NeutroHydro Technical Documentation}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Neutrosophic Chemometrics for Groundwater Analysis}
+
+% Code listing style
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{pythonstyle}{
+	backgroundcolor=\color{backcolour},
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,
+	breaklines=true,
+	captionpos=b,
+	keepspaces=true,
+	numbers=left,
+	numbersep=5pt,
+	showspaces=false,
+	showstringspaces=false,
+	showtabs=false,
+	tabsize=2,
+	language=Python
+}
+
+\lstset{style=pythonstyle}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Custom commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\inner}[2]{\left\langle#1,#2\right\rangle}
+\newcommand{\F}{\mathcal{F}}
+
+% Hyperref setup
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=magenta,
+	urlcolor=cyan,
+	pdftitle={NeutroHydro Technical Documentation},
+	pdfauthor={},
+	pdfsubject={Neutrosophic Chemometrics},
+	pdfkeywords={groundwater, chemometrics, neutrosophic logic}
+}
+
+% Title information
+\title{\textbf{NeutroHydro: Complete Technical Documentation}\\
+	\Large Neutrosophic Chemometrics for Groundwater Analysis}
+\author{}
+\date{December 28, 2025}
+
+\begin{document}
+	
+	\maketitle
+	
+	\begin{abstract}
+		NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in absolute concentration space. The framework combines neutrosophic logic with partial least squares regression to analyze groundwater chemistry, providing unambiguous attribution of prediction importance to baseline versus perturbation sources. This document presents the complete mathematical foundations, implementation details, and usage guidelines for the NeutroHydro framework.
+	\end{abstract}
+	
+	\tableofcontents
+	\newpage
+	
+	\section{Overview}
+	
+	NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in \textbf{absolute concentration space} (non-compositional). The complete workflow follows this structure:
+	
+	\begin{enumerate}
+		\item Raw Ion Data
+		\item Preprocessing (Robust centering/scaling)
+		\item NDG Encoder (T, I, F triplets)
+		\item PNPLS Regression (Augmented Hilbert space)
+		\item NVIP (Channel-wise variable importance)
+		\item NSR/$\pi_G$ (Baseline vs perturbation attribution)
+		\item Mineral Inference (Stoichiometric inversion)
+	\end{enumerate}
+	
+	\subsection{Core Mathematical Innovations}
+	
+	\subsubsection{Neutrosophic Data Representation}
+	
+	NeutroHydro maps each ion concentration to a triplet \textbf{(T, I, F)}:
+	
+	\begin{itemize}
+		\item \textbf{T (Truth)}: Baseline/reference component
+		\item \textbf{I (Indeterminacy)}: Uncertainty/ambiguity
+		\item \textbf{F (Falsity)}: Perturbation likelihood
+	\end{itemize}
+	
+	\subsubsection{L2-Additive VIP Decomposition}
+	
+	\begin{theorem}
+		Variable importance decomposes additively across channels:
+		\begin{equation}
+			\text{VIP}_{\text{agg}}^2(j) = \text{VIP}_T^2(j) + \text{VIP}_I^2(j) + \text{VIP}_F^2(j)
+		\end{equation}
+	\end{theorem}
+	
+	This allows \textbf{unambiguous attribution} of prediction importance to baseline versus perturbation sources.
+	
+	\subsubsection{Non-Compositional Framework}
+	
+	Unlike compositional data analysis (CoDa), NeutroHydro operates in \textbf{absolute concentration space}, preserving:
+	
+	\begin{itemize}
+		\item Physical interpretability
+		\item Additive mixing models
+		\item Direct stoichiometric constraints
+	\end{itemize}
+	
+	\subsubsection{Hybrid Geochemical-Statistical Engine}
+	
+	The framework combines rigorous mathematical optimization with expert hydrogeochemical heuristics:
+	
+	\begin{itemize}
+		\item \textbf{Context-Aware Inversion}: Uses WHO Quality Flags and Gibbs Diagrams to dynamically constrain the mineral solver
+		\item \textbf{Redox Detection}: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry
+		\item \textbf{Advanced Indices}: Integrated Simpson's Ratio (Standard \& Inverse) for precise salinity diagnosis (Seawater vs. Recharge)
+	\end{itemize}
+	
+	\newpage
+	
+	\section{Quick Start Guide}
+	
+	This section provides a practical introduction to using NeutroHydro for groundwater analysis.
+	
+	\subsection{Basic Workflow}
+	
+	The core of NeutroHydro is the \texttt{NeutroHydroPipeline} class. It handles preprocessing, encoding, model training, and mineral inversion in a single integrated workflow.
+	
+	\subsubsection{Preparing Your Data}
+	
+	Prepare a CSV file with your ion concentrations. The columns should match standard chemical symbols (e.g., \texttt{Ca}, \texttt{Mg}, \texttt{Na}, \texttt{HCO3}, \texttt{Cl}, \texttt{SO4}).
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{@{}lrrrrrrrr@{}}
+			\toprule
+			SampleID & Ca & Mg & Na & K & HCO3 & Cl & SO4 & NO3 \\
+			\midrule
+			S1 & 45 & 12 & 25 & 3 & 150 & 30 & 40 & 5 \\
+			S2 & 80 & 25 & 60 & 5 & 200 & 85 & 90 & 12 \\
+			\bottomrule
+		\end{tabular}
+		\caption{Example ion concentration data (mg/L)}
+	\end{table}
+	
+	\subsubsection{Running the Pipeline}
+	
+	\begin{lstlisting}[caption={Basic pipeline usage example}]
+		import pandas as pd
+		from neutrohydro import NeutroHydroPipeline
+		
+		# 1. Load Data
+		df = pd.read_csv("data.csv")
+		
+		# 2. Initialize Pipeline
+		# 'target_ions' are the ions you want to model/predict
+		pipeline = NeutroHydroPipeline(
+		target_ions=["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
+		)
+		
+		# 3. Fit the Model
+		# The pipeline automatically handles preprocessing and encoding
+		pipeline.fit(df)
+		
+		# 4. Get Results
+		# This returns a dictionary containing all analysis outputs
+		results = pipeline.analyze(df)
+		
+		# 5. Access Specific Outputs
+		print("Variable Importance (VIP):")
+		print(results["vip_scores"])
+		
+		print("\nMineral Contributions (First Sample):")
+		print(results["mineral_fractions"].iloc[0])
+		
+		print("\nWater Quality Flags:")
+		print(results["quality_flags"].iloc[0])
+	\end{lstlisting}
+	
+	\subsection{Advanced Features}
+	
+	\subsubsection{Mineral Inversion with Quality Constraints}
+	
+	NeutroHydro can use water quality flags (like WHO exceedances) to constrain the mineral inversion:
+	
+	\begin{lstlisting}[caption={Accessing quality assessment}]
+		# The pipeline does this automatically if you use the .analyze() method
+		# You can access the quality assessment directly:
+		
+		quality_df = results["quality_flags"]
+		print(quality_df[["Exceedances", "Inferred_Sources"]].head())
+	\end{lstlisting}
+	
+	\subsubsection{Hydrogeochemical Indices}
+	
+	The analysis automatically calculates standard indices:
+	
+	\begin{lstlisting}[caption={Accessing hydrogeochemical indices}]
+		indices = results["indices"]
+		print(indices[["Simpson_Class", "Simpson_Ratio_Inverse", 
+		"Gibbs_Ratio_1"]].head())
+	\end{lstlisting}
+	
+	\subsection{Visualization}
+	
+	You can visualize results using standard Python plotting libraries:
+	
+	\begin{lstlisting}[caption={Basic visualization example}]
+		import matplotlib.pyplot as plt
+		
+		# Plot Mineral Fractions for the first 5 samples
+		minerals = results["mineral_fractions"].head(5)
+		minerals.plot(kind="bar", stacked=True)
+		plt.title("Mineral Composition")
+		plt.ylabel("Fraction")
+		plt.show()
+	\end{lstlisting}
+	
+	\newpage
+	
+	\section{Mathematical Framework}
+	
+	\subsection{Preprocessing and Robust Scaling}
+	
+	Before neutrosophic encoding, raw ion concentrations must be preprocessed to handle the challenges inherent in geochemical data.
+	
+	\subsubsection{Challenges in Groundwater Data}
+	
+	Groundwater chemistry presents several statistical challenges:
+	
+	\begin{itemize}
+		\item \textbf{Heavy Tails}: Concentrations often follow log-normal or power-law distributions
+		\item \textbf{Outliers}: Contamination events create extreme values
+		\item \textbf{Heteroscedasticity}: Variance increases with concentration magnitude
+		\item \textbf{Missing Data}: Below-detection-limit measurements
+	\end{itemize}
+	
+	\subsubsection{Robust Centering}
+	
+	Classical mean centering is sensitive to outliers. We use the \textbf{median} as a robust location estimator:
+	
+	\begin{equation}
+		\tilde{x}_j = \text{median}(X_{:,j})
+	\end{equation}
+	
+	\textbf{Properties:}
+	\begin{itemize}
+		\item 50\% breakdown point (most robust)
+		\item Resistant to up to 50\% contamination
+		\item Invariant to monotonic transformations
+	\end{itemize}
+	
+	\subsubsection{Robust Scaling}
+	
+	We use the Median Absolute Deviation (MAD) as a robust scale estimator:
+	
+	\begin{equation}
+		\text{MAD}_j = \text{median}(|X_{:,j} - \tilde{x}_j|)
+	\end{equation}
+	
+	The standardized data becomes:
+	
+	\begin{equation}
+		X_{ij}^{(\text{std})} = \frac{X_{ij} - \tilde{x}_j}{c \cdot \text{MAD}_j + \delta}
+	\end{equation}
+	
+	where:
+	\begin{itemize}
+		\item $c = 1.4826$ (consistency factor for normal distribution)
+		\item $\delta > 0$ (small constant to prevent division by zero, typically $10^{-10}$)
+	\end{itemize}
+	
+	\subsubsection{Mathematical Properties}
+	
+	\begin{theorem}[Standardization Invariance]
+		If $X_{ij}^{(\text{std})}$ is computed via MAD scaling, then the Euclidean distances in the standardized space are invariant to linear transformations of the original scale.
+	\end{theorem}
+	
+	\begin{proof}
+		Let $Y_{ij} = a_j X_{ij} + b_j$ for constants $a_j > 0, b_j \in \R$. Then:
+		\begin{align}
+			\tilde{y}_j &= a_j \tilde{x}_j + b_j \\
+			\text{MAD}_j^{(Y)} &= a_j \cdot \text{MAD}_j^{(X)}
+		\end{align}
+		
+		Therefore:
+		\begin{equation}
+			Y_{ij}^{(\text{std})} = \frac{a_j X_{ij} + b_j - (a_j \tilde{x}_j + b_j)}{c \cdot a_j \text{MAD}_j^{(X)}} = \frac{X_{ij} - \tilde{x}_j}{c \cdot \text{MAD}_j^{(X)}} = X_{ij}^{(\text{std})}
+		\end{equation}
+	\end{proof}
+	
+	\newpage
+	
+	\section{NDG Encoder: Neutrosophic Triplets}
+	
+	\subsection{Mathematical Foundation}
+	
+	The NDG (Neutrosophic Data Generation) encoder transforms standardized concentrations $X^{(\text{std})} \in \R^{n \times p}$ into triplet space $(T, I, F) \in \R^{n \times p} \times \R^{n \times p} \times \R^{n \times p}$.
+	
+	\subsubsection{Truth Channel (T): Baseline Component}
+	
+	The truth channel represents the "expected" or "reference" concentration pattern. Three baseline options are available:
+	
+	\paragraph{Option 1: Median Baseline}
+	\begin{equation}
+		T_{ij} = 0 \quad \forall i,j
+	\end{equation}
+	Since data is already median-centered, the median baseline is simply zero.
+	
+	\paragraph{Option 2: Low-Rank Baseline}
+	Compute the rank-$r$ truncated SVD of $X^{(\text{std})}$:
+	\begin{equation}
+		X^{(\text{std})} = U \Sigma V^\top = \sum_{k=1}^{\min(n,p)} \sigma_k u_k v_k^\top
+	\end{equation}
+	
+	The low-rank baseline is:
+	\begin{equation}
+		X_T = \sum_{k=1}^r \sigma_k u_k v_k^\top = U_r \Sigma_r V_r^\top
+	\end{equation}
+	
+	where $U_r \in \R^{n \times r}$, $\Sigma_r \in \R^{r \times r}$, $V_r \in \R^{p \times r}$.
+	
+	\paragraph{Option 3: Robust PCA Baseline}
+	Solve the robust principal component analysis problem:
+	\begin{equation}
+		\min_{L,S} \norm{L}_* + \lambda \norm{S}_1 \quad \text{subject to} \quad X^{(\text{std})} = L + S
+	\end{equation}
+	
+	where:
+	\begin{itemize}
+		\item $\norm{L}_*$ is the nuclear norm (sum of singular values)
+		\item $\norm{S}_1$ is the element-wise $\ell_1$ norm
+		\item $\lambda > 0$ is a regularization parameter
+	\end{itemize}
+	
+	The baseline is $T = L$ (low-rank component), and $S$ captures sparse corruptions.
+	
+	\subsubsection{Residual Component}
+	
+	The deviation from baseline is:
+	\begin{equation}
+		R = X^{(\text{std})} - T
+	\end{equation}
+	
+	\subsubsection{Indeterminacy Channel (I): Uncertainty}
+	
+	The default indeterminacy is based on standardized variance:
+	\begin{equation}
+		I_{ij} = \frac{\sigma_j^{(\text{std})}}{\max_k \sigma_k^{(\text{std})}}
+	\end{equation}
+	
+	where $\sigma_j^{(\text{std})}$ is the standard deviation of the $j$-th standardized ion.
+	
+	\textbf{Properties:}
+	\begin{itemize}
+		\item $I_{ij} \in [0, 1]$
+		\item Constant across samples for a given ion
+		\item High $I$ indicates high variability/uncertainty
+	\end{itemize}
+	
+	\subsubsection{Falsity Channel (F): Perturbation Likelihood}
+	
+	Falsity quantifies how anomalous each observation is relative to the baseline. Two mapping functions are available:
+	
+	\paragraph{Exponential Map (Default)}
+	\begin{equation}
+		F_{ij} = 1 - \exp(-u_{ij})
+	\end{equation}
+	
+	where:
+	\begin{equation}
+		u_{ij} = \frac{|R_{ij}|}{\sigma_j + \delta}
+	\end{equation}
+	
+	with $\sigma_j$ being the MAD-based scale of ion $j$ and $\delta$ a small regularization constant.
+	
+	\paragraph{Logistic Map}
+	\begin{equation}
+		F_{ij} = \frac{1}{1 + \exp(-a(u_{ij} - b))}
+	\end{equation}
+	
+	where $a > 0$ controls steepness and $b > 0$ controls the inflection point.
+	
+	\subsection{Theoretical Properties}
+	
+	\begin{theorem}[Orthogonality of Truth and Residual]
+		For low-rank baseline $T = U_r \Sigma_r V_r^\top$ with rank $r < \min(n,p)$, the Frobenius inner product between baseline and residual is zero:
+		\begin{equation}
+			\inner{T}{R}_F = \text{tr}(T^\top R) = 0
+		\end{equation}
+	\end{theorem}
+	
+	\begin{proof}
+		Let $X^{(\text{std})} = U\Sigma V^\top$ be the full SVD. Then:
+		\begin{align}
+			T &= U_r \Sigma_r V_r^\top \\
+			R &= X^{(\text{std})} - T = U_{r+1:n} \Sigma_{r+1:n} V_{r+1:p}^\top
+		\end{align}
+		
+		The inner product becomes:
+		\begin{equation}
+			\inner{T}{R}_F = \text{tr}\left[V_r \Sigma_r U_r^\top U_{r+1:n} \Sigma_{r+1:n} V_{r+1:p}^\top\right]
+		\end{equation}
+		
+		Since $U$ is orthogonal: $U_r^\top U_{r+1:n} = 0$, therefore:
+		\begin{equation}
+			\inner{T}{R}_F = 0
+		\end{equation}
+	\end{proof}
+	
+	\begin{theorem}[Falsity Monotonicity]
+		For exponential falsity map $F_{ij} = 1 - \exp(-u_{ij})$ where $u_{ij} = |R_{ij}|/(\sigma_j + \delta)$, falsity is strictly monotone increasing in $|R_{ij}|$:
+		\begin{equation}
+			|R_{ij}| < |R_{kj}| \implies F_{ij} < F_{kj}
+		\end{equation}
+	\end{theorem}
+	
+	\begin{proof}
+		The falsity map is:
+		\begin{equation}
+			F_{ij} = g_F(u_{ij}) = 1 - \exp(-u_{ij})
+		\end{equation}
+		
+		Taking the derivative:
+		\begin{equation}
+			\frac{\partial F_{ij}}{\partial u_{ij}} = \exp(-u_{ij}) > 0 \quad \forall u_{ij} \geq 0
+		\end{equation}
+		
+		Since $\partial F/\partial u > 0$, the map is strictly increasing. Furthermore:
+		\begin{equation}
+			\frac{\partial u_{ij}}{\partial |R_{ij}|} = \frac{1}{\sigma_j + \delta} > 0
+		\end{equation}
+		
+		By the chain rule:
+		\begin{equation}
+			\frac{\partial F_{ij}}{\partial |R_{ij}|} = \frac{\partial F_{ij}}{\partial u_{ij}} \cdot \frac{\partial u_{ij}}{\partial |R_{ij}|} > 0
+		\end{equation}
+		
+		Therefore, larger deviations always produce higher falsity values.
+	\end{proof}
+	
+	\newpage
+	
+	\section{PNPLS: Probabilistic Neutrosophic PLS}
+	
+	\subsection{Mathematical Foundation}
+	
+	PNPLS extends Partial Least Squares (PLS) regression to neutrosophic triplet data $(T, I, F)$ by constructing an augmented predictor space and applying elementwise precision weights.
+	
+	\subsubsection{Input Data}
+	
+	From the NDG encoder:
+	\begin{itemize}
+		\item Triplet channels: $X_T, X_I, X_F \in \R^{n \times p}$
+		\item Standardized target: $y^{(\text{std})} \in \R^n$
+	\end{itemize}
+	
+	\subsubsection{Augmented Predictor Space}
+	
+	The augmented predictor matrix combines all three channels:
+	\begin{equation}
+		X^{(\text{aug})} = \left[\, X_T \quad \sqrt{\rho_I} X_I \quad \sqrt{\rho_F} X_F \,\right] \in \R^{n \times 3p}
+	\end{equation}
+	
+	where channel weights are:
+	\begin{itemize}
+		\item $\rho_T = 1$ (Truth channel, always included)
+		\item $\rho_I \geq 0$ (Indeterminacy weight, default: 1)
+		\item $\rho_F \geq 0$ (Falsity weight, default: 1)
+	\end{itemize}
+	
+	\subsubsection{Induced Inner Product}
+	
+	The augmented space $\R^{3p}$ has inner product:
+	\begin{equation}
+		\inner{u}{v}_{\mathcal{N}} = u_T^\top v_T + \rho_I u_I^\top v_I + \rho_F u_F^\top v_F
+	\end{equation}
+	
+	where $u = [u_T^\top, u_I^\top, u_F^\top]^\top$ and similarly for $v$.
+	
+	\textbf{Properties:}
+	\begin{itemize}
+		\item Positive definite (since $\rho_I, \rho_F \geq 0$)
+		\item Euclidean structure preserved
+		\item Well-defined projections and orthogonality
+	\end{itemize}
+	
+	\subsection{Precision Weighting}
+	
+	\subsubsection{Elementwise Weights from Falsity}
+	
+	High falsity observations are downweighted:
+	\begin{equation}
+		W_{ij} = \exp(-\lambda_F \cdot F_{ij})
+	\end{equation}
+	
+	where $\lambda_F > 0$ controls downweighting strength.
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item High falsity $F_{ij} \approx 1$ $\Rightarrow$ low weight $W_{ij} \approx \exp(-\lambda_F)$
+		\item Low falsity $F_{ij} \approx 0$ $\Rightarrow$ high weight $W_{ij} \approx 1$
+	\end{itemize}
+	
+	\subsubsection{Extension to Augmented Space}
+	
+	Weights are replicated across all channels:
+	\begin{equation}
+		W^{(\text{aug})} = \left[\, W \quad W \quad W \,\right] \in \R^{n \times 3p}
+	\end{equation}
+	
+	\subsubsection{Weighted Predictors}
+	
+	\begin{equation}
+		\widetilde{X}^{(\text{aug})} = W^{(\text{aug})} \odot X^{(\text{aug})}
+	\end{equation}
+	
+	where $\odot$ denotes elementwise (Hadamard) product.
+	
+	\subsection{PLS1 via NIPALS Algorithm}
+	
+	\subsubsection{Algorithm Structure}
+	
+	\textbf{Input:} $\widetilde{X}^{(\text{aug})} \in \R^{n \times 3p}$, $y^{(\text{std})} \in \R^n$, number of components $k$
+	
+	\textbf{Output:} Latent components $(T, W, P, q, \beta)$
+	
+	\textbf{Initialize:}
+	\begin{align}
+		E_0 &\leftarrow \widetilde{X}^{(\text{aug})} \\
+		f_0 &\leftarrow y^{(\text{std})}
+	\end{align}
+	
+	\textbf{For} $h = 1, \ldots, k$:
+	
+	\begin{enumerate}
+		\item Compute weight vector:
+		\begin{equation}
+			w_h = \frac{E_{h-1}^\top f_{h-1}}{\norm{E_{h-1}^\top f_{h-1}}}
+		\end{equation}
+		
+		\item Project to latent space:
+		\begin{equation}
+			t_h = E_{h-1} w_h
+		\end{equation}
+		
+		\item Normalize:
+		\begin{equation}
+			t_h \leftarrow \frac{t_h}{\norm{t_h}}
+		\end{equation}
+		
+		\item Compute loadings:
+		\begin{equation}
+			p_h = E_{h-1}^\top t_h
+		\end{equation}
+		
+		\item Compute response loading:
+		\begin{equation}
+			q_h = f_{h-1}^\top t_h
+		\end{equation}
+		
+		\item Deflate:
+		\begin{align}
+			E_h &= E_{h-1} - t_h p_h^\top \\
+			f_h &= f_{h-1} - q_h t_h
+		\end{align}
+	\end{enumerate}
+	
+	\subsubsection{Regression Coefficients}
+	
+	The PLS regression coefficients in the augmented space are:
+	\begin{equation}
+		\beta^{(\text{aug})} = W(P^\top W)^{-1} q
+	\end{equation}
+	
+	where:
+	\begin{itemize}
+		\item $W = [w_1, \ldots, w_k] \in \R^{3p \times k}$
+		\item $P = [p_1, \ldots, p_k] \in \R^{3p \times k}$
+		\item $q = [q_1, \ldots, q_k]^\top \in \R^k$
+	\end{itemize}
+	
+	\subsection{Model Diagnostics}
+	
+	\subsubsection{Cross-Validation}
+	
+	Use $K$-fold cross-validation to select the number of components:
+	
+	\begin{enumerate}
+		\item Split data into $K$ folds
+		\item For each $k = 1, \ldots, k_{\max}$:
+		\begin{itemize}
+			\item Fit PNPLS on training folds
+			\item Predict on validation fold
+			\item Compute RMSE or $R^2$
+		\end{itemize}
+		\item Select $k^*$ that minimizes validation RMSE
+	\end{enumerate}
+	
+	\subsubsection{Explained Variance}
+	
+	For each component $h$:
+	\begin{equation}
+		R^2_h = \frac{\text{Var}(t_h)}{\text{Var}(y^{(\text{std})})}
+	\end{equation}
+	
+	Cumulative explained variance:
+	\begin{equation}
+		R^2_{\text{cum}}(k) = \sum_{h=1}^k R^2_h
+	\end{equation}
+	
+	\newpage
+	
+	\section{NVIP: Neutrosophic Variable Importance}
+	
+	\subsection{Mathematical Foundation}
+	
+	Neutrosophic Variable Importance in Projection (NVIP) extends classical VIP to decompose importance across truth, indeterminacy, and falsity channels.
+	
+	\subsubsection{Classical VIP}
+	
+	For standard PLS with $p$ variables and $k$ components, the Variable Importance in Projection for variable $j$ is:
+	
+	\begin{equation}
+		\text{VIP}(j) = \sqrt{\frac{p \sum_{h=1}^k w_{jh}^2 \cdot \text{SSY}_h}{\sum_{h=1}^k \text{SSY}_h}}
+	\end{equation}
+	
+	where:
+	\begin{itemize}
+		\item $w_{jh}$ is the weight of variable $j$ in component $h$
+		\item $\text{SSY}_h$ is the sum of squares explained by component $h$
+	\end{itemize}
+	
+	\subsubsection{NVIP Decomposition}
+	
+	For PNPLS with augmented space $[X_T, X_I, X_F]$, we partition the weight matrix:
+	
+	\begin{align}
+		W_T &= W[1:p, :] \in \R^{p \times k} \\
+		W_I &= W[p+1:2p, :] \in \R^{p \times k} \\
+		W_F &= W[2p+1:3p, :] \in \R^{p \times k}
+	\end{align}
+	
+	Channel-specific energies are:
+	\begin{align}
+		E_T(j) &= \frac{p \sum_{h=1}^k W_{T,jh}^2 \cdot \text{SSY}_h}{\sum_{h=1}^k \text{SSY}_h} \\
+		E_I(j) &= \frac{p \sum_{h=1}^k W_{I,jh}^2 \cdot \text{SSY}_h}{\sum_{h=1}^k \text{SSY}_h} \\
+		E_F(j) &= \frac{p \sum_{h=1}^k W_{F,jh}^2 \cdot \text{SSY}_h}{\sum_{h=1}^k \text{SSY}_h}
+	\end{align}
+	
+	\subsubsection{Channel VIPs}
+	
+	\begin{align}
+		\text{VIP}_T(j) &= \sqrt{E_T(j)} \\
+		\text{VIP}_I(j) &= \sqrt{E_I(j)} \\
+		\text{VIP}_F(j) &= \sqrt{E_F(j)}
+	\end{align}
+	
+	\subsubsection{Aggregate VIP}
+	
+	\begin{theorem}[L2-Additive Decomposition]
+		The aggregate VIP satisfies:
+		\begin{equation}
+			\text{VIP}_{\text{agg}}^2(j) = \text{VIP}_T^2(j) + \text{VIP}_I^2(j) + \text{VIP}_F^2(j)
+		\end{equation}
+	\end{theorem}
+	
+	\begin{proof}
+		By direct computation:
+		\begin{align}
+			\text{VIP}_{\text{agg}}^2(j) &= E_T(j) + E_I(j) + E_F(j) \\
+			&= \text{VIP}_T^2(j) + \text{VIP}_I^2(j) + \text{VIP}_F^2(j)
+		\end{align}
+	\end{proof}
+	
+	\subsection{Interpretation}
+	
+	\subsubsection{Importance Threshold}
+	
+	Variables with $\text{VIP}_{\text{agg}}(j) > 1$ are considered important for prediction.
+	
+	\subsubsection{Channel Dominance}
+	
+	For each ion, we can classify:
+	\begin{itemize}
+		\item \textbf{Truth-dominant}: $E_T(j) > E_I(j) + E_F(j)$
+		\item \textbf{Perturbation-dominant}: $E_T(j) < E_I(j) + E_F(j)$
+	\end{itemize}
+	
+	\subsection{Bootstrap Confidence Intervals}
+	
+	To assess stability of VIP estimates:
+	
+	\begin{enumerate}
+		\item Generate $B$ bootstrap samples (resampling with replacement)
+		\item For each bootstrap sample $b = 1, \ldots, B$:
+		\begin{itemize}
+			\item Fit PNPLS
+			\item Compute NVIP
+			\item Store $\text{VIP}_T^{(b)}, \text{VIP}_I^{(b)}, \text{VIP}_F^{(b)}$
+		\end{itemize}
+		\item Compute 95\% confidence intervals using percentile method
+	\end{enumerate}
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item Wide CI: Variable importance is unstable
+		\item Narrow CI: Variable importance is reliable
+	\end{itemize}
+	
+	\newpage
+	
+	\section{Attribution Metrics: NSR and $\pi_G$}
+	
+	\subsection{Ion-Level Attribution}
+	
+	\subsubsection{Energy Partition}
+	
+	From NVIP, we define:
+	\begin{itemize}
+		\item \textbf{Truth energy (baseline)}: $E_T(j) = \text{VIP}_T^2(j)$
+		\item \textbf{Perturbation energy}: $E_P(j) = E_I(j) + E_F(j) = \text{VIP}_I^2(j) + \text{VIP}_F^2(j)$
+	\end{itemize}
+	
+	\subsubsection{Baseline Fraction}
+	
+	\begin{equation}
+		\boxed{\pi_G(j) = \frac{E_T(j)}{E_T(j) + E_P(j)} \in [0, 1]}
+	\end{equation}
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item $\pi_G(j) \approx 1$: Ion $j$ prediction driven by baseline
+		\item $\pi_G(j) \approx 0$: Ion $j$ prediction driven by perturbation
+		\item $\pi_G(j) \approx 0.5$: Mixed contribution
+	\end{itemize}
+	
+	The perturbation fraction is:
+	\begin{equation}
+		\pi_A(j) = 1 - \pi_G(j) = \frac{E_P(j)}{E_T(j) + E_P(j)}
+	\end{equation}
+	
+	\subsubsection{Neutrosophic Source Ratio (NSR)}
+	
+	\begin{equation}
+		\boxed{\text{NSR}(j) = \frac{E_T(j) + \epsilon}{E_P(j) + \epsilon}}
+	\end{equation}
+	
+	where $\epsilon > 0$ (default: $10^{-10}$) prevents division by zero.
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item $\text{NSR}(j) \gg 1$: Baseline-dominant
+		\item $\text{NSR}(j) \approx 1$: Balanced
+		\item $\text{NSR}(j) \ll 1$: Perturbation-dominant
+	\end{itemize}
+	
+	\textbf{Relationship to $\pi_G$:}
+	\begin{equation}
+		\pi_G(j) = \frac{\text{NSR}(j)}{1 + \text{NSR}(j)}
+	\end{equation}
+	
+	\subsection{Sample-Level Attribution}
+	
+	For each water sample $i$, compute the baseline fraction:
+	\begin{equation}
+		G_i = \frac{\sum_{j=1}^p w_j \cdot T_{ij}}{\sum_{j=1}^p w_j \cdot (T_{ij} + |F_{ij}|)}
+	\end{equation}
+	
+	where $w_j$ are variable weights (e.g., based on VIP).
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item $G_i \approx 1$: Sample dominated by baseline patterns
+		\item $G_i \approx 0$: Sample dominated by perturbations
+	\end{itemize}
+	
+	\newpage
+	
+	\section{Mineral Stoichiometric Inversion}
+	
+	\subsection{Problem Formulation}
+	
+	Given observed ion concentrations $\mathbf{c} = [c_1, \ldots, c_p]^\top$ (in meq/L or mmol/L), we seek to estimate the contribution of minerals that could produce this chemistry.
+	
+	\subsubsection{Forward Model}
+	
+	The forward geochemical model is:
+	\begin{equation}
+		\mathbf{c} = \mathbf{S} \mathbf{s}
+	\end{equation}
+	
+	where:
+	\begin{itemize}
+		\item $\mathbf{c} \in \R^p$: Observed ion concentrations
+		\item $\mathbf{S} \in \R^{p \times m}$: Stoichiometric matrix (each column is a mineral)
+		\item $\mathbf{s} \in \R^m$: Mineral contributions (mass dissolved per sample)
+	\end{itemize}
+	
+	\subsubsection{Inverse Problem}
+	
+	The inverse problem seeks to estimate $\mathbf{s}$ from $\mathbf{c}$:
+	\begin{equation}
+		\min_{\mathbf{s} \geq 0} \norm{\mathbf{c} - \mathbf{S}\mathbf{s}}_2^2
+	\end{equation}
+	
+	This is a Non-Negative Least Squares (NNLS) problem.
+	
+	\subsection{Weighted NNLS}
+	
+	To account for different ion reliabilities, we use weighted NNLS:
+	\begin{equation}
+		\min_{\mathbf{s} \geq 0} \norm{\mathbf{W}(\mathbf{c} - \mathbf{S}\mathbf{s})}_2^2
+	\end{equation}
+	
+	where $\mathbf{W} = \text{diag}(w_1, \ldots, w_p)$ with weights:
+	\begin{equation}
+		w_j = \begin{cases}
+			\text{VIP}_{\text{agg}}(j) & \text{if using VIP weighting} \\
+			1 & \text{otherwise}
+		\end{cases}
+	\end{equation}
+	
+	\subsection{Context-Aware Mineral Selection}
+	
+	The model dynamically adjusts the mineral library based on hydrogeochemical context.
+	
+	\subsubsection{Gibbs Diagram Classification}
+	
+	Gibbs ratios classify water-rock interaction regimes:
+	\begin{align}
+		\text{Gibbs}_1 &= \frac{\text{Cl}^-}{\text{Cl}^- + \text{HCO}_3^-} \\
+		\text{Gibbs}_2 &= \frac{\text{Na}^+ + \text{K}^+}{\text{Na}^+ + \text{K}^+ + \text{Ca}^{2+}}
+	\end{align}
+	
+	\textbf{Regimes:}
+	\begin{itemize}
+		\item \textbf{Rock weathering}: Low Gibbs$_1$, variable Gibbs$_2$
+		\item \textbf{Evaporation}: High Gibbs$_1$, high Gibbs$_2$
+		\item \textbf{Precipitation}: Low Gibbs$_1$, low Gibbs$_2$
+	\end{itemize}
+	
+	\subsubsection{Cation Exchange Index}
+	
+	The Chloro-Alkaline Index (CAI) detects ion exchange:
+	\begin{equation}
+		\text{CAI} = \frac{\text{Cl}^- - (\text{Na}^+ + \text{K}^+)}{\text{Cl}^-}
+	\end{equation}
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item $\text{CAI} > 0$: Base exchange (Na/K replacing Ca/Mg)
+		\item $\text{CAI} < 0$: Reverse exchange (Ca/Mg replacing Na/K)
+		\item $\text{CAI} \approx 0$: No significant exchange
+	\end{itemize}
+	
+	\subsection{Simpson's Ratio}
+	
+	Simpson's ratio distinguishes salinity mechanisms:
+	
+	\subsubsection{Standard Simpson's Ratio}
+	\begin{equation}
+		\text{SR}_{\text{std}} = \frac{\text{Cl}^- - 0.87 \times \text{Na}^+}{0.87 \times \text{SO}_4^{2-}}
+	\end{equation}
+	
+	\textbf{Classification:}
+	\begin{itemize}
+		\item $\text{SR} < -1$: Fresh (Class 0)
+		\item $-1 \leq \text{SR} < 1$: Slight (Class 1)
+		\item $1 \leq \text{SR} < 2$: Moderate (Class 2)
+		\item $\text{SR} \geq 2$: Severe (Class 3)
+	\end{itemize}
+	
+	\subsubsection{Inverse Simpson's Ratio}
+	\begin{equation}
+		\text{SR}_{\text{inv}} = \frac{0.87 \times \text{SO}_4^{2-}}{\text{Cl}^- - 0.87 \times \text{Na}^+}
+	\end{equation}
+	
+	\textbf{Mechanism:}
+	\begin{itemize}
+		\item $\text{SR}_{\text{inv}} > 1$: Recharge-driven
+		\item $\text{SR}_{\text{inv}} < 0.5$: Intrusion-driven
+	\end{itemize}
+	
+	\subsection{Standard Mineral Library}
+	
+	\begin{table}[H]
+		\centering
+		\small
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			Mineral & Formula & Primary Ions \\
+			\midrule
+			Calcite & CaCO$_3$ & Ca$^{2+}$, HCO$_3^-$ \\
+			Dolomite & CaMg(CO$_3$)$_2$ & Ca$^{2+}$, Mg$^{2+}$, HCO$_3^-$ \\
+			Magnesite & MgCO$_3$ & Mg$^{2+}$, HCO$_3^-$ \\
+			Gypsum & CaSO$_4 \cdot$2H$_2$O & Ca$^{2+}$, SO$_4^{2-}$ \\
+			Anhydrite & CaSO$_4$ & Ca$^{2+}$, SO$_4^{2-}$ \\
+			Halite & NaCl & Na$^+$, Cl$^-$ \\
+			Sylvite & KCl & K$^+$, Cl$^-$ \\
+			Mirabilite & Na$_2$SO$_4 \cdot$10H$_2$O & Na$^+$, SO$_4^{2-}$ \\
+			Thenardite & Na$_2$SO$_4$ & Na$^+$, SO$_4^{2-}$ \\
+			Glauberite & Na$_2$Ca(SO$_4$)$_2$ & Na$^+$, Ca$^{2+}$, SO$_4^{2-}$ \\
+			Epsomite & MgSO$_4 \cdot$7H$_2$O & Mg$^{2+}$, SO$_4^{2-}$ \\
+			Fluorite & CaF$_2$ & Ca$^{2+}$, F$^-$ \\
+			Albite & NaAlSi$_3$O$_8$ & Na$^+$, HCO$_3^-$ \\
+			Anorthite & CaAl$_2$Si$_2$O$_8$ & Ca$^{2+}$, HCO$_3^-$ \\
+			K-feldspar & KAlSi$_3$O$_8$ & K$^+$, HCO$_3^-$ \\
+			Biotite & KMg$_3$AlSi$_3$O$_{10}$(OH)$_2$ & K$^+$, Mg$^{2+}$, HCO$_3^-$ \\
+			Niter & KNO$_3$ & K$^+$, NO$_3^-$ \\
+			Soda Niter & NaNO$_3$ & Na$^+$, NO$_3^-$ \\
+			Nitrocalcite & Ca(NO$_3$)$_2 \cdot$4H$_2$O & Ca$^{2+}$, NO$_3^-$ \\
+			Otavite & CdCO$_3$ & Cd$^{2+}$, HCO$_3^-$ \\
+			Smithsonite & ZnCO$_3$ & Zn$^{2+}$, HCO$_3^-$ \\
+			Cerussite & PbCO$_3$ & Pb$^{2+}$, HCO$_3^-$ \\
+			Borax & Na$_2$B$_4$O$_7 \cdot$10H$_2$O & Na$^+$, B \\
+			Malachite & Cu$_2$CO$_3$(OH)$_2$ & Cu$^{2+}$, HCO$_3^-$ \\
+			\bottomrule
+		\end{tabular}
+		\caption{Standard mineral library}
+	\end{table}
+	
+	\newpage
+	
+	\section{Water Quality Assessment}
+	
+	\subsection{WHO Guidelines}
+	
+	The framework checks concentrations against WHO drinking water guidelines.
+	
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{@{}lrl@{}}
+			\toprule
+			Parameter & Guideline (mg/L) & Health Concern \\
+			\midrule
+			pH & 6.5 - 8.5 & Corrosion/taste \\
+			TDS & $< 1000$ & Taste/scaling \\
+			Chloride & $< 250$ & Taste \\
+			Sulfate & $< 250$ & Taste/laxative \\
+			Nitrate & $< 50$ & Methemoglobinemia \\
+			Fluoride & $< 1.5$ & Dental/skeletal fluorosis \\
+			Sodium & $< 200$ & Taste \\
+			\bottomrule
+		\end{tabular}
+		\caption{Selected WHO drinking water guidelines}
+	\end{table}
+	
+	\subsection{Quality Flag Generation}
+	
+	For each sample, the system generates:
+	
+	\begin{enumerate}
+		\item \textbf{Exceedances}: List of parameters exceeding guidelines
+		\item \textbf{Severity Score}: Number and magnitude of exceedances
+		\item \textbf{Inferred Sources}: Probable contamination sources based on exceedance pattern
+	\end{enumerate}
+	
+	\textbf{Common patterns:}
+	\begin{itemize}
+		\item High Cl$^-$, Na$^+$: Saline intrusion
+		\item High NO$_3^-$: Agricultural contamination
+		\item High SO$_4^{2-}$: Industrial/mining impact
+		\item High F$^-$: Geogenic (volcanic rocks)
+	\end{itemize}
+	
+	\newpage
+	
+	\section{Hydrogeochemical Processes}
+	
+	\subsection{Mixing Processes}
+	
+	\subsubsection{Binary Mixing}
+	
+	For two endmembers A and B:
+	\begin{equation}
+		c_i = f \cdot c_{A,i} + (1-f) \cdot c_{B,i}
+	\end{equation}
+	
+	where $f \in [0,1]$ is the mixing fraction.
+	
+	\subsubsection{Conservative Tracers}
+	
+	Chloride is often used as a conservative tracer:
+	\begin{equation}
+		f = \frac{c_{\text{Cl}} - c_{B,\text{Cl}}}{c_{A,\text{Cl}} - c_{B,\text{Cl}}}
+	\end{equation}
+	
+	\subsection{Cation Exchange}
+	
+	\subsubsection{Direct Exchange}
+	
+	\textbf{Base exchange:}
+	\begin{equation}
+		2\text{Na}^+_{\text{aq}} + \text{Ca-X}_2 \rightarrow \text{Ca}^{2+}_{\text{aq}} + 2\text{Na-X}
+	\end{equation}
+	
+	\textbf{Reverse exchange:}
+	\begin{equation}
+		\text{Ca}^{2+}_{\text{aq}} + 2\text{Na-X} \rightarrow 2\text{Na}^+_{\text{aq}} + \text{Ca-X}_2
+	\end{equation}
+	
+	\subsubsection{Detection via CAI}
+	
+	The Chloro-Alkaline Index reveals exchange direction:
+	\begin{itemize}
+		\item CAI $> 0$: Base exchange occurring
+		\item CAI $< 0$: Reverse exchange occurring
+	\end{itemize}
+	
+	\subsection{Redox Processes}
+	
+	\subsubsection{Denitrification}
+	
+	\begin{equation}
+		5\text{CH}_2\text{O} + 4\text{NO}_3^- \rightarrow 2\text{N}_2 + 4\text{HCO}_3^- + \text{CO}_2 + 3\text{H}_2\text{O}
+	\end{equation}
+	
+	This process:
+	\begin{itemize}
+		\item Removes NO$_3^-$ (negative stoichiometry)
+		\item Adds HCO$_3^-$
+		\item Requires organic matter
+	\end{itemize}
+	
+	\subsubsection{Sulfate Reduction}
+	
+	\begin{equation}
+		2\text{CH}_2\text{O} + \text{SO}_4^{2-} \rightarrow \text{H}_2\text{S} + 2\text{HCO}_3^-
+	\end{equation}
+	
+	This process:
+	\begin{itemize}
+		\item Removes SO$_4^{2-}$
+		\item Adds HCO$_3^-$
+		\item Produces H$_2$S (often precipitated as FeS)
+	\end{itemize}
+	
+	\newpage
+	
+	\section{Model Limitations and Validity}
+	
+	\subsection{Known Limitations}
+	
+	\subsubsection{Non-Uniqueness}
+	
+	\textbf{Issue:} Multiple mineral assemblages can produce similar ion patterns.
+	
+	\textbf{Mitigation:}
+	\begin{itemize}
+		\item Use context (Gibbs diagrams, quality flags) to constrain solutions
+		\item Prefer simpler assemblages (Occam's razor)
+		\item Cross-validate with saturation indices
+	\end{itemize}
+	
+	\subsubsection{Thermodynamic Blindness}
+	
+	\textbf{Issue:} The model is mass balance-based, not thermodynamic.
+	
+	\textbf{Implication:} It can propose minerals that are thermodynamically unfavorable.
+	
+	\textbf{Recommendation:} Validate results with PHREEQC or similar equilibrium codes.
+	
+	\subsubsection{Conservative Chloride Assumption}
+	
+	\textbf{Issue:} CAI and mixing models assume Cl$^-$ is conservative.
+	
+	\textbf{Reality:} In some environments, Cl$^-$ can be added (halite dissolution) or removed (salt precipitation).
+	
+	\textbf{Mitigation:} Verify using Cl/Br ratios when available.
+	
+	\subsection{Appropriate Use Cases}
+	
+	NeutroHydro is valid for:
+	
+	\begin{enumerate}
+		\item \textbf{Hypothesis generation}: Identifying probable sources and processes
+		\item \textbf{Forensic fingerprinting}: Distinguishing contamination from natural processes
+		\item \textbf{Screening studies}: Rapid assessment of large datasets
+	\end{enumerate}
+	
+	NeutroHydro should NOT replace:
+	\begin{enumerate}
+		\item Thermodynamic equilibrium modeling (use PHREEQC)
+		\item Isotopic analysis
+		\item Direct field investigation
+	\end{enumerate}
+	
+	\subsection{Model Strengths}
+	
+	\begin{enumerate}
+		\item \textbf{Uncertainty handling}: Neutrosophic $(I, F)$ logic captures noise that breaks other models
+		\item \textbf{Constraint integration}: CAI and Gibbs logic reduce non-uniqueness
+		\item \textbf{Context awareness}: WHO integration ensures pollution sources are respected
+		\item \textbf{Interpretability}: L2-additive VIP decomposition provides unambiguous attribution
+	\end{enumerate}
+	
+	\newpage
+	
+	\section{API Reference}
+	
+	\subsection{Pipeline API}
+	
+	\subsubsection{NeutroHydroPipeline}
+	
+	The \texttt{NeutroHydroPipeline} class orchestrates the entire workflow.
+	
+	\begin{lstlisting}[caption={NeutroHydroPipeline class definition}]
+		class NeutroHydroPipeline:
+		def __init__(self, target_ions: list[str], **kwargs):
+		"""
+		Initialize the pipeline.
+		
+		Parameters
+		----------
+		target_ions : list[str]
+		List of ions to model (e.g., ['Ca', 'Mg', 'Na', ...])
+		**kwargs : dict
+		Additional parameters for encoder, model, etc.
+		"""
+		...
+		
+		def fit(self, df: pd.DataFrame):
+		"""
+		Fit the internal models (Scaler, Encoder, PNPLS) to the data.
+		
+		Parameters
+		----------
+		df : pd.DataFrame
+		Input data with ion concentrations
+		"""
+		...
+		
+		def analyze(self, df: pd.DataFrame) -> dict:
+		"""
+		Run the full analysis on the provided data.
+		
+		Parameters
+		----------
+		df : pd.DataFrame
+		Input data with ion concentrations
+		
+		Returns
+		-------
+		dict
+		A dictionary containing:
+		- 'vip_scores': Variable Importance
+		- 'mineral_fractions': Mineral inversion results
+		- 'quality_flags': WHO assessment
+		- 'indices': Hydrogeochemical indices
+		"""
+		...
+	\end{lstlisting}
+	
+	\subsection{Core Modules API}
+	
+	\subsubsection{Encoder Module}
+	
+	\begin{lstlisting}[caption={NDGEncoder class}]
+		from neutrohydro.encoder import NDGEncoder
+		
+		encoder = NDGEncoder(
+		baseline_type='low_rank',  # 'median', 'low_rank', or 'robust_pca'
+		baseline_rank=3,           # for low_rank baseline
+		falsity_map='exponential'  # 'exponential' or 'logistic'
+		)
+		
+		# Fit and transform
+		triplets = encoder.fit_transform(X_std)
+		
+		# Access components
+		print(triplets.T.shape)  # Truth
+		print(triplets.I.shape)  # Indeterminacy
+		print(triplets.F.shape)  # Falsity
+	\end{lstlisting}
+	
+	\subsubsection{Model Module}
+	
+	\begin{lstlisting}[caption={PNPLS model}]
+		from neutrohydro.model import PNPLS
+		
+		model = PNPLS(
+		n_components=5,
+		channel_weights=(1.0, 1.0, 1.0),  # (rho_T, rho_I, rho_F)
+		falsity_penalty=1.0                # lambda_F
+		)
+		
+		model.fit(triplets, y_std)
+		y_pred = model.predict(triplets)
+	\end{lstlisting}
+	
+	\subsubsection{Minerals Module}
+	
+	\begin{lstlisting}[caption={Mineral inversion}]
+		from neutrohydro.minerals import MineralInverter
+		
+		inverter = MineralInverter(
+		minerals='standard',  # or custom dict
+		use_vip_weights=True
+		)
+		
+		mineral_fractions = inverter.invert(
+		concentrations=df,
+		vip_scores=nvip_result
+		)
+	\end{lstlisting}
+	
+	\subsubsection{Quality Check Module}
+	
+	\begin{lstlisting}[caption={Water quality assessment}]
+		from neutrohydro.quality_check import assess_water_quality
+		
+		quality_df = assess_water_quality(
+		df,
+		guidelines='WHO'  # or custom dict
+		)
+		
+		print(quality_df[['Exceedances', 'Severity', 
+		'Inferred_Sources']].head())
+	\end{lstlisting}
+	
+	\newpage
+	
+	\section{Examples and Tutorials}
+	
+	\subsection{Basic Usage Example}
+	
+	\begin{lstlisting}[caption={Complete basic workflow}]
+		import pandas as pd
+		from neutrohydro import NeutroHydroPipeline
+		import matplotlib.pyplot as plt
+		
+		# Load data
+		df = pd.read_csv("groundwater_data.csv")
+		
+		# Define target ions
+		ions = ["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
+		
+		# Initialize pipeline
+		pipeline = NeutroHydroPipeline(target_ions=ions)
+		
+		# Fit and analyze
+		pipeline.fit(df)
+		results = pipeline.analyze(df)
+		
+		# Display VIP scores
+		print("Variable Importance:")
+		print(results["vip_scores"])
+		
+		# Plot mineral fractions
+		fig, ax = plt.subplots(figsize=(10, 6))
+		results["mineral_fractions"].head(10).plot(
+		kind='bar', 
+		stacked=True, 
+		ax=ax
+		)
+		ax.set_xlabel("Sample")
+		ax.set_ylabel("Fraction")
+		ax.set_title("Mineral Composition")
+		plt.tight_layout()
+		plt.show()
+		
+		# Check quality flags
+		print("\nQuality Assessment:")
+		print(results["quality_flags"][
+		["Exceedances", "Severity"]
+		].head())
+	\end{lstlisting}
+	
+	\subsection{Advanced Workflow: Custom Minerals}
+	
+	\begin{lstlisting}[caption={Using custom mineral library}]
+		from neutrohydro.minerals import MineralInverter, STANDARD_MINERALS
+		
+		# Define custom minerals
+		custom_minerals = {
+			"Aragonite": {
+				"formula": "CaCO3",
+				"stoichiometry": {"Ca": 1.0, "HCO3": 2.0},
+				"description": "Calcium carbonate polymorph"
+			},
+			"Epsomite": {
+				"formula": "MgSO4·7H2O",
+				"stoichiometry": {"Mg": 1.0, "SO4": 1.0},
+				"description": "Magnesium sulfate heptahydrate"
+			}
+		}
+		
+		# Combine with standard library
+		all_minerals = {**STANDARD_MINERALS, **custom_minerals}
+		
+		# Create inverter with custom library
+		inverter = MineralInverter(
+		minerals=all_minerals,
+		use_vip_weights=True
+		)
+		
+		# Perform inversion
+		mineral_results = inverter.invert(
+		concentrations=df,
+		vip_scores=vip_scores
+		)
+	\end{lstlisting}
+	
+	\subsection{Handling Redox Processes}
+	
+	\begin{lstlisting}[caption={Including redox phases}]
+		from neutrohydro.minerals import (
+		STANDARD_MINERALS, 
+		REDOX_PHASES, 
+		MineralInverter
+		)
+		
+		# Combine standard and redox minerals
+		combined_minerals = {
+			**STANDARD_MINERALS, 
+			**REDOX_PHASES
+		}
+		
+		# Create inverter
+		inverter = MineralInverter(minerals=combined_minerals)
+		
+		# Invert
+		results = inverter.invert(df)
+		
+		# Check for redox signals
+		redox_minerals = [
+		'Denitrification', 
+		'SulfateReduction'
+		]
+		redox_contributions = results[redox_minerals]
+		print("Redox process contributions:")
+		print(redox_contributions[redox_contributions.sum(axis=1) > 0.05])
+	\end{lstlisting}
+	
+	\newpage
+	
+	\section{Interpreting Results}
+	
+	\subsection{Understanding Mineral Fractions}
+	
+	Mineral fractions represent the relative contribution of each mineral to the total dissolved solids (TDS) of the sample.
+	
+	\textbf{Key points:}
+	\begin{itemize}
+		\item Fractions sum to 1 (normalized)
+		\item High fraction indicates dominant process
+		\item Zero fraction means mineral not needed to explain chemistry
+	\end{itemize}
+	
+	\textbf{Example interpretation:}
+	\begin{itemize}
+		\item High Calcite fraction $\Rightarrow$ Carbonate weathering dominant
+		\item High Halite fraction $\Rightarrow$ Saline influence
+		\item High Gypsum fraction $\Rightarrow$ Evaporite dissolution
+	\end{itemize}
+	
+	\subsection{Quality Flags}
+	
+	\textbf{Exceedances} list parameters violating WHO guidelines.
+	
+	\textbf{Inferred sources} suggest potential origins:
+	\begin{itemize}
+		\item \textbf{Saline Intrusion}: High Cl$^-$, Na$^+$
+		\item \textbf{Agricultural}: High NO$_3^-$, sometimes K$^+$
+		\item \textbf{Industrial}: High SO$_4^{2-}$, heavy metals
+		\item \textbf{Geogenic}: High F$^-$, As, or natural salinity
+	\end{itemize}
+	
+	\subsection{Simpson Ratio (SR) / Revelle Coefficient: Interpretation}
+	
+	\subsubsection{Definition and computation}
+	The Simpson Ratio (also referred to as the Revelle coefficient) is defined as:
+	\[
+	SR = \frac{Cl^-}{HCO_3^- + CO_3^{2-}}
+	\]
+	where concentrations should be expressed in \textbf{equivalent units} (e.g., meq/L) to preserve charge balance consistency.
+	
+	\subsubsection{Severity classification (Todd/Simpson classes)}
+	The SR is a non-negative index; higher values indicate stronger marine influence / salinization.
+	\begin{table}[H]
+	\centering
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		SR value & Interpretation \\
+		\midrule
+		$< 0.5$ & Good quality (no/very low SWI influence) \\
+		$0.5$--$1.3$ & Slightly contaminated \\
+		$1.3$--$2.8$ & Moderately contaminated \\
+		$2.8$--$6.6$ & Injuriously contaminated \\
+		$6.6$--$15.5$ & Highly contaminated \\
+		\bottomrule
+	\end{tabular}
+	\end{table}
+	
+	\subsubsection{Optional: inverse form (same information, more intuitive)}
+	Define the Freshening Ratio (FR) as the inverse of SR:
+	\[
+	FR = \frac{HCO_3^- + CO_3^{2-}}{Cl^-} = \frac{1}{SR}
+	\]
+	Large FR indicates freshwater dominance; small FR indicates marine influence.
+	(Using FR does not add new diagnostic power; it is a monotonic re-expression of SR.)
+	
+	\subsubsection{Process-direction indicator (mechanism): Base Exchange Index (BEX)}
+	To infer whether the system trends toward \textbf{freshening} or \textbf{salinization} (ion-exchange response), use BEX (meq/L):
+	\[
+	BEX = Na^+ + K^+ + Mg^{2+} - 1.0716\,Cl^-
+	\]
+	Interpretation:
+	\begin{itemize}
+	\item $BEX>0$: Freshening trend
+	\item $BEX<0$: Salinization trend
+	\item $BEX\approx 0$: No clear base-exchange signal	
+	\end{itemize}
+	
+	\subsection{VIP Scores}
+	
+	\textbf{Truth VIP (VIP$_T$):} Importance of baseline trend (natural mixing)
+	
+	\textbf{Falsity VIP (VIP$_F$):} Importance of perturbations (pollution/exchange)
+	
+	\textbf{Interpretation strategy:}
+	\begin{enumerate}
+		\item Rank ions by VIP$_{\text{agg}}$
+		\item For important ions (VIP$_{\text{agg}} > 1$):
+		\begin{itemize}
+			\item High VIP$_T$ $\Rightarrow$ Natural process
+			\item High VIP$_F$ $\Rightarrow$ Anthropogenic or anomalous
+		\end{itemize}
+	\end{enumerate}
+	
+	\newpage
+	
+	\section{Citation}
+	
+	If you use NeutroHydro in your research, please cite:
+	
+	\begin{verbatim}
+		@software{neutrohydro,
+			title = {NeutroHydro: Neutrosophic Chemometrics 
+				for Groundwater Analysis},
+			year = {2024},
+			url = {https://github.com/dabdul-wahab1988/neutrohydro}
+		}
+	\end{verbatim}
+	
+	\section{License}
+	
+	MIT License. See LICENSE file in the repository for full details.
+	
+	\section{Acknowledgments}
+	
+	This work builds upon foundational research in:
+	\begin{itemize}
+		\item Neutrosophic logic (Smarandache, 1998)
+		\item Partial Least Squares regression (Wold et al., 1993)
+		\item Robust statistics (Reimann et al., 2008)
+		\item Groundwater geochemistry (Appelo \& Postma, 2005)
+	\end{itemize}
+	
+	\newpage
+	
+	\section{References}
+	
+	\begin{enumerate}
+		\item Smarandache, F. (1998). \textit{Neutrosophy: Neutrosophic probability, set, and logic}. American Research Press.
+		
+		\item Wold, S., Johansson, E., \& Cocchi, M. (1993). PLS—partial least-squares projections to latent structures. In \textit{3D QSAR in drug design} (pp. 523-550).
+		
+		\item Reimann, C., Filzmoser, P., Garrett, R. G., \& Dutter, R. (2008). \textit{Statistical data analysis explained: Applied environmental statistics with R}. John Wiley \& Sons.
+		
+		\item Candès, E. J., Li, X., Ma, Y., \& Wright, J. (2011). Robust principal component analysis? \textit{Journal of the ACM}, 58(3), 1-37.
+		
+		\item Mehmood, T., Liland, K. H., Snipen, L., \& Sæbø, S. (2012). A review of variable selection methods in partial least squares regression. \textit{Chemometrics and Intelligent Laboratory Systems}, 118, 62-69.
+		
+		\item Farrés, M., Platikanov, S., Tsakovski, S., \& Tauler, R. (2015). Comparison of the variable importance in projection (VIP) and of the selectivity ratio (SR) methods for variable selection and interpretation. \textit{Journal of Chemometrics}, 29(10), 528-536.
+		
+		\item Appelo, C. A. J., \& Postma, D. (2005). \textit{Geochemistry, groundwater and pollution}. CRC Press.
+		
+		\item WHO (2011). \textit{Guidelines for drinking-water quality} (4th ed.). World Health Organization.
+	\end{enumerate}
+	
+\end{document}
