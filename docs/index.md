@@ -87,7 +87,7 @@ Combines rigorous mathematical optimization with expert hydrogeochemical heurist
 
 - **Context-Aware Inversion**: Uses **WHO Quality Flags** and **Gibbs Diagrams** to dynamically constrain the mineral solver.
 - **Redox Detection**: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry.
-- **Advanced Indices**: Integrated **Simpson's Ratio** (Standard & Inverse) for precise salinity diagnosis (Seawater vs. Recharge).
+- **Advanced Indices**: Integrated **Simpson's Ratio** (Revelle Coefficient) and **Base Exchange Index (BEX)** for precise salinity and freshening diagnosis.
 
 ## Quick Navigation
 

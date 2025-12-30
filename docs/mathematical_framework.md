@@ -123,7 +123,7 @@ NeutroHydro implements a **neutrosophic chemometric framework** for groundwater 
 │ PHASE 6: MINERAL INFERENCE (Section 8) [Optional]          │
 ├─────────────────────────────────────────────────────────────┤
 │ Input:  Ion concentrations c (meq/L), π_G                  │
-│ Output: Mineral contributions s, plausibility              │
+│ Output: Mineral contributions s, plausibility, indices (SR, BEX)  │
 │                                                             │
 │ Stoichiometric Model:                                       │
 │   c ≈ A·s    where s ≥ 0                                   │
@@ -138,6 +138,10 @@ NeutroHydro implements a **neutrosophic chemometric framework** for groundwater 
 │   Mineral k plausible if:                                   │
 │     • ŝ_k > τ_s    (sufficient contribution)               │
 │     • ‖D(c - Aŝ)‖ ≤ τ_r    (good fit)                     │
+│                                                             │
+│ Diagnostic Indices:                                         │
+│   • Simpson Ratio (SR): Cl / (HCO3 + CO3)                  │
+│   • Base Exchange Index (BEX): Na + K + Mg - 1.0716·Cl     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -146,6 +150,7 @@ NeutroHydro implements a **neutrosophic chemometric framework** for groundwater 
 ### 4.1 Euclidean Structure
 
 All operations occur in true Euclidean spaces:
+
 - Preprocessing: $\mathbb{R}^p$
 - Augmented space: $\mathbb{R}^{3p}$ with inner product
   $$\langle u, v \rangle_{\mathcal{N}} = u_T^\top v_T + \rho_I u_I^\top v_I + \rho_F u_F^\top v_F$$
@@ -172,10 +177,12 @@ Since $\Omega_h = \sum_m [\omega_{T,h}(m) + \omega_{I,h}(m) + \omega_{F,h}(m)]$,
 ### 4.3 Conservation Laws
 
 **Unity constraints**:
+
 1. $\pi_G(j) + \pi_A(j) = 1$ for all ions $j$
 2. $G_i + A_i = 1$ for all samples $i$
 
 **Bounds**:
+
 1. $VIP_c(j) \geq 0$ for all channels $c \in \{T, I, F\}$
 2. $\pi_G(j), G_i \in [0, 1]$
 3. $I_{ij}, F_{ij} \in [0, 1]$
@@ -202,6 +209,7 @@ The framework defines **baseline** and **perturbation** **operationally**:
 ### 5.2 External Validation Required
 
 Attribution to **physical sources** (geogenic vs. anthropogenic) requires **external evidence**:
+
 - Spatial patterns (urban vs. rural)
 - Temporal trends (pre/post contamination event)
 - Isotopic tracers
@@ -267,6 +275,7 @@ The framework provides **consistent mathematical attribution**; causal interpret
 ### 8.2 Sensitivity Analysis
 
 Recommended workflow:
+
 1. Fit with default hyperparameters
 2. Compute predictions and VIPs
 3. Vary one hyperparameter at a time
@@ -298,12 +307,14 @@ Recommended workflow:
 ## 10. Software Implementation
 
 The mathematical framework is implemented in Python with:
+
 - **NumPy/SciPy**: Core numerical operations
 - **scikit-learn**: PLS utilities (validation, not direct use)
 - **Custom NIPALS**: Channel-aware PLS implementation
 - **SciPy.optimize.nnls**: Non-negative least squares for minerals
 
 All operations preserve **numerical stability** via:
+
 - Robust scaling (MAD, not std)
 - Small $\delta$ constants for division safety
 - SVD for pseudo-inverses

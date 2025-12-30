@@ -8,9 +8,9 @@ The Quality Assessment module provides an automated system for evaluating ground
 
 ## Features
 
-1.  **WHO Compliance Check**: Automatically flags parameters exceeding standard limits.
-2.  **Source Inference**: Uses hydrogeochemical logic to infer the likely cause of contamination (e.g., Saline Intrusion vs. Anthropogenic Pollution).
-3.  **Integration**: Can be used as a standalone tool or to provide **context-aware constraints** for the Mineral Inversion model.
+1. **WHO Compliance Check**: Automatically flags parameters exceeding standard limits.
+2. **Source Inference**: Uses hydrogeochemical logic to infer the likely cause of contamination (e.g., Saline Intrusion vs. Anthropogenic Pollution).
+3. **Integration**: Can be used as a standalone tool or to provide **context-aware constraints** for the Mineral Inversion model.
 
 ## Mathematical Logic
 
@@ -34,24 +34,38 @@ The module uses standard WHO guideline values (mg/L):
 The module applies a set of heuristic rules to infer sources based on specific combinations of exceedances:
 
 #### 2.1 Saline Intrusion
-*   **Trigger**: High Chloride ($Cl > 250$) **AND** High Sodium ($Na > 200$).
-*   **Inference**: "Saline Intrusion/Brine".
-*   **Implication**: Suggests seawater mixing or deep brine upwelling.
+
+* **Trigger**: High Chloride ($Cl > 250$) **AND** High Sodium ($Na > 200$).
+* **Inference**: "Saline Intrusion/Brine".
+* **Implication**: Suggests seawater mixing or deep brine upwelling.
 
 #### 2.2 Anthropogenic Pollution
-*   **Trigger**: High Nitrate ($NO_3 > 50$).
-*   **Inference**: "Anthropogenic (Agri/Sewage)".
-*   **Implication**: Surface contamination from fertilizers or wastewater.
+
+* **Trigger**: High Nitrate ($NO_3 > 50$).
+* **Inference**: "Anthropogenic (Agri/Sewage)".
+* **Implication**: Surface contamination from fertilizers or wastewater.
 
 #### 2.3 Industrial/Mining
-*   **Trigger**: High Sulfate ($SO_4 > 250$) **WITHOUT** High Calcium (which would suggest Gypsum).
-*   **Inference**: "Industrial/Mining".
-*   **Implication**: Acid mine drainage or industrial effluent.
+
+* **Trigger**: High Sulfate ($SO_4 > 250$) **WITHOUT** High Calcium (which would suggest Gypsum).
+* **Inference**: "Industrial/Mining".
+* **Implication**: Acid mine drainage or industrial effluent.
 
 #### 2.4 Geogenic (Rock-Water Interaction)
-*   **Trigger**: High Fluoride ($F > 1.5$) or High Calcium/Sulfate (Gypsum).
-*   **Inference**: "Geogenic (Rock-Water)".
-*   **Implication**: Natural weathering of specific mineral formations.
+
+* **Trigger**: High Fluoride ($F > 1.5$) or High Calcium/Sulfate (Gypsum).
+* **Inference**: "Geogenic (Rock-Water)".
+* **Implication**: Natural weathering of specific mineral formations.
+
+### 3. Supporting Indices for Inference
+
+While exceedances trigger the inference, the module and `MineralInverter` use secondary indices to confirm the process:
+
+| Process | Primary Index | Secondary Evidence |
+| :--- | :--- | :--- |
+| **Saline Intrusion** | Simpson Ratio (SR) > 15.5 | BEX < 0, Gibbs Anion > 0.8 |
+| **Freshening/Recharge** | Freshening Ratio (FR) > 1 | BEX > 0, Gibbs Anion < 0.2 |
+| **Ion Exchange** | CAI-1/CAI-2 | BEX ≠ 0 |
 
 ## Usage
 

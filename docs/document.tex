@@ -158,7 +158,7 @@
 	\begin{itemize}
 		\item \textbf{Context-Aware Inversion}: Uses WHO Quality Flags and Gibbs Diagrams to dynamically constrain the mineral solver
 		\item \textbf{Redox Detection}: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry
-		\item \textbf{Advanced Indices}: Integrated Simpson's Ratio (Standard \& Inverse) for precise salinity diagnosis (Seawater vs. Recharge)
+		\item \textbf{Advanced Indices}: Integrated Simpson's Ratio (Revelle Coefficient), Freshening Ratio (FR), and Base Exchange Index (BEX) for precise salinity and process diagnosis
 	\end{itemize}
 	
 	\newpage
@@ -899,32 +899,48 @@
 		\item $\text{CAI} \approx 0$: No significant exchange
 	\end{itemize}
 	
-	\subsection{Simpson's Ratio}
+	\subsection{Simpson's Ratio (Revelle Coefficient)}
 	
-	Simpson's ratio distinguishes salinity mechanisms:
+	Simpson's ratio distinguishes salinity mechanisms and contamination levels:
 	
-	\subsubsection{Standard Simpson's Ratio}
+	\subsubsection{Standard Ratio (SR)}
 	\begin{equation}
-		\text{SR}_{\text{std}} = \frac{\text{Cl}^- - 0.87 \times \text{Na}^+}{0.87 \times \text{SO}_4^{2-}}
+		\text{SR} = \frac{\text{Cl}^-}{\text{HCO}_3^- + \text{CO}_3^{2-}}
 	\end{equation}
 	
-	\textbf{Classification:}
+	\textbf{Classification (Todd/Simpson):}
 	\begin{itemize}
-		\item $\text{SR} < -1$: Fresh (Class 0)
-		\item $-1 \leq \text{SR} < 1$: Slight (Class 1)
-		\item $1 \leq \text{SR} < 2$: Moderate (Class 2)
-		\item $\text{SR} \geq 2$: Severe (Class 3)
+		\item $\text{SR} < 0.5$: Good quality
+		\item $0.5 \leq \text{SR} < 1.3$: Slightly contaminated
+		\item $1.3 \leq \text{SR} < 2.8$: Moderately contaminated
+		\item $2.8 \leq \text{SR} < 6.6$: Injuriously contaminated
+		\item $6.6 \leq \text{SR} < 15.5$: Highly contaminated
+		\item $\text{SR} \geq 15.5$: Extremely contaminated (Seawater influence)
 	\end{itemize}
 	
-	\subsubsection{Inverse Simpson's Ratio}
+	\subsubsection{Freshening Ratio (FR)}
 	\begin{equation}
-		\text{SR}_{\text{inv}} = \frac{0.87 \times \text{SO}_4^{2-}}{\text{Cl}^- - 0.87 \times \text{Na}^+}
+		\text{FR} = \frac{\text{HCO}_3^- + \text{CO}_3^{2-}}{\text{Cl}^-}
 	\end{equation}
 	
-	\textbf{Mechanism:}
+	\textbf{Interpretation:}
 	\begin{itemize}
-		\item $\text{SR}_{\text{inv}} > 1$: Recharge-driven
-		\item $\text{SR}_{\text{inv}} < 0.5$: Intrusion-driven
+		\item $\text{FR} > 1$: Freshwater recharge dominance
+		\item $\text{FR} < 0.5$: Saline/marine influence dominance
+	\end{itemize}
+	
+	\subsection{Base Exchange Index (BEX)}
+	
+	The BEX identifies whether the groundwater system is trending toward freshening or salinization based on cation and chloride concentrations:
+	\begin{equation}
+		\text{BEX} = \text{Na}^+ + \text{K}^+ + \text{Mg}^{2+} - 1.0716 \cdot \text{Cl}^-
+	\end{equation}
+	
+	\textbf{Interpretation:}
+	\begin{itemize}
+		\item $\text{BEX} > 0$: Freshening trend (recharge zone)
+		\item $\text{BEX} < 0$: Salinization trend (intrusion/saline zone)
+		\item $\text{BEX} \approx 0$: No clear base-exchange signal (Simple mixing)
 	\end{itemize}
 	
 	\subsection{Standard Mineral Library}

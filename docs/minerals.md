@@ -19,12 +19,14 @@ Ion concentrations arise from **mineral dissolution**:
 $$c = A s + r$$
 
 where:
+
 - $c \in \mathbb{R}^m$: Observed ion concentrations (in **meq/L**, recommended)
 - $A \in \mathbb{R}^{m \times K}$: **Stoichiometric matrix** (mineral compositions)
 - $s \in \mathbb{R}^K_{\geq 0}$: **Mineral contributions** (non-negative)
 - $r \in \mathbb{R}^m$: **Residual** (unmodeled processes)
 
 **Units**:
+
 - $c_\ell$ in meq/L (milli-equivalents per liter) ensures **charge balance**
 - $s_k$ in arbitrary units (relative contributions)
 - $A_{\ell k}$ = meq of ion $\ell$ per unit mineral $k$
@@ -42,10 +44,12 @@ where $a_{\ell k}$ = equivalents of ion $\ell$ produced per unit dissolution of 
 $$\text{NaCl} \to \text{Na}^+ + \text{Cl}^-$$
 
 In meq/L, dissolution of 1 mole NaCl produces:
+
 - 1 meq Na⁺
 - 1 meq Cl⁻
 
 So for halite column:
+
 ```
 Ion order: [Ca²⁺, Mg²⁺, Na⁺, K⁺, HCO₃⁻, Cl⁻, SO₄²⁻, NO₃⁻, F⁻]
 Halite:    [0,    0,    1.0, 0,   0,      1.0, 0,     0,     0  ]
@@ -60,6 +64,7 @@ See Section 4 for standard mineral library.
 $$\hat{s} = \arg\min_{s \geq 0} \|c - As\|^2$$
 
 **Non-negative least squares (NNLS)**:
+
 - Ensures $s_k \geq 0$ (minerals can only dissolve, not precipitate)
 - Convex optimization (unique solution)
 - Fast algorithms available (SciPy, active set method)
@@ -75,6 +80,7 @@ where $D = \text{diag}(d_1, \ldots, d_m)$ and:
 $$d_\ell = \pi_G(\text{ion}_\ell)^\eta$$
 
 **Hyperparameters**:
+
 - $\eta \geq 1$: Weighting exponent (default: 1.0)
   - $\eta = 1$: Linear weighting
   - $\eta > 1$: Stronger emphasis on baseline
@@ -153,6 +159,7 @@ Mineral $k$ is **plausible** in sample $i$ if:
 **Both** criteria must be satisfied.
 
 **Rationale**:
+
 - Criterion 1: Avoids spurious tiny contributions
 - Criterion 2: Ensures model fits the data
 
@@ -188,13 +195,13 @@ These phases are used to fingerprint specific contamination sources.
 | Marker | Formula | Key Ions | Interpretation |
 |--------|---------|----------|----------------|
 | **Niter** | KNO₃ | K⁺, NO₃⁻ | Potassium-based fertilizers |
-| **Soda Niter** | NaNO₃ | Na⁺, NO₃⁻ | Sodium-based fertilizers or wastewater |
+| **Soda Niter** | NaNO₃ | Na⁺, NO₃⁻ | Sodium-based fertilizers |
 | **Nitrocalcite** | Ca(NO₃)₂ | Ca²⁺, NO₃⁻ | Calcium nitrate fertilizers |
-| **Otavite** | CdCO₃ | Cd²⁺, HCO₃⁻ | Cadmium impurity in phosphate fertilizers |
-| **Smithsonite** | ZnCO₃ | Zn²⁺, HCO₃⁻ | Industrial zinc or sewage sludge |
-| **Cerussite** | PbCO₃ | Pb²⁺, HCO₃⁻ | Industrial lead or road runoff |
-| **Borax** | Na₂B₄O₇ | Na⁺, B | Detergents (wastewater) |
-| **Malachite** | Cu₂CO₃(OH)₂ | Cu²⁺, HCO₃⁻ | Pesticides/Fungicides |
+| **Otavite** | CdCO₃ | Cd²⁺, HCO₃⁻ | Cadmium impurity marker |
+| **Smithsonite** | ZnCO₃ | Zn²⁺, HCO₃⁻ | Industrial/Sewage marker |
+| **Cerussite** | PbCO₃ | Pb²⁺, HCO₃⁻ | Industrial/Road marker |
+| **Borax** | Na₂B₄O₇ | Na⁺, B | Detergent/Wastewater marker |
+| **Malachite** | Cu₂CO₃(OH)₂ | Cu²⁺, HCO₃⁻ | Pesticide/Industrial marker |
 
 #### 4.3 Redox Phases (Optional)
 
@@ -211,6 +218,7 @@ These phases represent biogeochemical sinks (mass loss) or sources (mass gain) d
 **Note on Trace Metals**: The model includes markers for Cd, Zn, Pb, B, Cu, As, Cr, and U. However, these are **only evaluated if the corresponding ion data is provided**. If metal concentrations are missing, these minerals are automatically excluded from the inversion to prevent "ghost" assignments.
 
 **Full Ion Order** (m = 17):
+
 ```
 [Ca²⁺, Mg²⁺, Na⁺, K⁺, HCO₃⁻, Cl⁻, SO₄²⁻, NO₃⁻, F⁻, 
  Zn²⁺, Cd²⁺, Pb²⁺, B, Cu²⁺, As, Cr, U]
@@ -220,23 +228,25 @@ These phases represent biogeochemical sinks (mass loss) or sources (mass gain) d
 
 The `MineralInverter` and pipeline are designed to handle datasets with varying ion availability:
 
-1.  **Data-Driven Mineral Selection**: The model checks which ions are present in the input dataset.
-2.  **Automatic Filtering**: Any mineral requiring a missing ion is removed from the candidate list.
-    *   *Example*: If `Cd` is not measured, `Otavite` is removed.
-    *   *Example*: If `NO3` is not measured, `Niter`, `SodaNiter`, and `Nitrocalcite` are removed.
-3.  **Robustness**: This ensures that the model never "hallucinates" a mineral contribution based on missing data, while still allowing for sophisticated forensic analysis when comprehensive data is available.
+1. **Data-Driven Mineral Selection**: The model checks which ions are present in the input dataset.
+2. **Automatic Filtering**: Any mineral requiring a missing ion is removed from the candidate list.
+    - *Example*: If `Cd` is not measured, `Otavite` is removed.
+    - *Example*: If `NO3` is not measured, `Niter`, `SodaNiter`, and `Nitrocalcite` are removed.
+3. **Robustness**: This ensures that the model never "hallucinates" a mineral contribution based on missing data, while still allowing for sophisticated forensic analysis when comprehensive data is available.
 
 ### 6. Algorithm
 
 #### Fitting (Per Sample)
 
 **Input**:
+
 - Ion vector $c_i \in \mathbb{R}^m$ (in meq/L)
 - Stoichiometric matrix $A \in \mathbb{R}^{m \times K}$
 - Baseline fractions $\pi_G \in \mathbb{R}^m$ (optional)
 - Hyperparameters $\eta, \tau_s, \tau_r$
 
 **Output**:
+
 - Mineral contributions $\hat{s}_i \in \mathbb{R}^K$
 - Residual $r_i \in \mathbb{R}^m$
 - Plausibility mask $P_i \in \{0, 1\}^K$
@@ -292,6 +302,7 @@ result = inverter.invert(c_meq, pi_G)
 ```
 
 **Requirements**:
+
 - Keys must match **ion order** (see `STANDARD_IONS`)
 - Values in **meq per unit** (charge-consistent)
 - Unlisted ions assumed zero contribution
@@ -303,10 +314,12 @@ result = inverter.invert(c_meq, pi_G)
 $$\text{meq/L} = \frac{\text{mg/L}}{M} \times |z|$$
 
 where:
+
 - $M$ = molar mass (g/mol)
 - $|z|$ = absolute charge
 
 **Example** (Ca²⁺):
+
 - Molar mass = 40.078 g/mol
 - Charge = +2
 - 100 mg/L Ca²⁺ = $\frac{100}{40.078} \times 2 = 4.99$ meq/L
@@ -329,6 +342,7 @@ c_meq = convert_to_meq(
 $$\text{meq/L} = \text{mmol/L} \times |z|$$
 
 **Example** (SO₄²⁻):
+
 - 5 mmol/L SO₄²⁻ = $5 \times 2 = 10$ meq/L
 
 ### 8. Limitations and Caveats
@@ -336,6 +350,7 @@ $$\text{meq/L} = \text{mmol/L} \times |z|$$
 #### 8.1 Model Assumptions
 
 The stoichiometric model assumes:
+
 1. **Simple dissolution**: Minerals dissolve incongruently
 2. **No ion exchange**: Cations don't swap on clays
 3. **No redox**: Oxidation states don't change (e.g., Fe²⁺ → Fe³⁺)
@@ -343,6 +358,7 @@ The stoichiometric model assumes:
 5. **Equilibrium**: Instantaneous reactions
 
 **Violations common in real systems**:
+
 - Cation exchange (Ca²⁺ ↔ 2Na⁺ on clays)
 - Redox (O₂, NO₃⁻ reduction)
 - Kinetics (slow weathering)
@@ -351,6 +367,7 @@ The stoichiometric model assumes:
 #### 8.2 Residual Sources
 
 Large residuals ($\|r\|_D > \tau_r$) may indicate:
+
 - **Missing endmembers**: Important minerals not in library
 - **Non-mineral sources**: Fertilizers (NO₃⁻, K⁺), wastewater (Na⁺, Cl⁻)
 - **Ion exchange**: Alters Ca/Na ratio without mineral dissolution
@@ -360,6 +377,7 @@ Large residuals ($\|r\|_D > \tau_r$) may indicate:
 #### 8.3 Non-Uniqueness
 
 NNLS solution may not be **unique** if:
+
 - Minerals have similar stoichiometry (e.g., gypsum vs. anhydrite)
 - System is underdetermined ($K > m$)
 
@@ -380,6 +398,7 @@ $$\sum_{\ell \in \text{cations}} c_\ell \approx \sum_{\ell \in \text{anions}} c_
 #### 9.2 Residual Patterns
 
 Plot $r_\ell$ vs. $\ell$ (ion index):
+
 - **Random scatter**: Good fit
 - **Systematic bias** (all positive or negative): Missing endmember
 - **Outliers**: Specific ions poorly fit
@@ -397,6 +416,7 @@ $$\sum_{k=1}^K \frac{\hat{s}_k}{\sum_{k'} \hat{s}_{k'}} = 1$$
 #### 9.4 Sensitivity to $π_G$
 
 Compare inversions with and without $π_G$ weighting:
+
 - Large difference → Attribution matters
 - Small difference → Stoichiometry dominates
 
@@ -405,12 +425,14 @@ Compare inversions with and without $π_G$ weighting:
 #### 10.1 Stacked Bar Chart: Mineral Fractions
 
 For each sample $i$, stacked bar with height = 1:
+
 - Segments = mineral fractions
 - Color by mineral type (carbonates, sulfates, chlorides, etc.)
 
 #### 10.2 Heatmap: Mineral Plausibility
 
 Heatmap with:
+
 - Rows: Samples
 - Columns: Minerals
 - Color: Plausibility (binary) or contribution $\hat{s}_{ik}$
@@ -418,6 +440,7 @@ Heatmap with:
 #### 10.3 Residual Magnitude
 
 Histogram of $\|r_i\|_D$ across all samples:
+
 - Threshold $\tau_r$ marked
 - Fraction above threshold = poor fits
 
@@ -433,6 +456,7 @@ Used to identify **Ion Exchange** processes.
 - **CAI-2**: $[Cl^- - (Na^+ + K^+)] / (SO_4^{2-} + HCO_3^- + NO_3^-)$
 
 **Constraints**:
+
 - **CAI < 0** (Freshening): Implies $Ca^{2+} \to Na^+$ exchange. The model **bans** `Clay_ReleaseCa`.
 - **CAI > 0** (Intrusion): Implies $Na^+ \to Ca^{2+}$ exchange. The model **bans** `Clay_ReleaseNa`.
 
@@ -446,31 +470,35 @@ Used to classify the dominant hydrogeochemical process.
 - **Cation Ratio**: $Na^+ / (Na^+ + Ca^{2+})$
 
 **Constraints**:
+
 - **Rock Dominance** (Both ratios < 0.5): The model **penalizes/bans** Evaporite minerals (e.g., Halite, Mirabilite) to prevent overfitting noise as saline deposits in fresh water.
 
-#### 11.3 Simpson's Ratio (Salinity & Intrusion)
+#### 11.3 Simpson's Ratio (Revelle Coefficient) & BEX
 
-Both the **Standard** and **Inverse** ratios are implemented to provide a complete diagnosis of salinity. They are designed to be used together:
+The model distinguishes salinity mechanisms using the Simpson Ratio and its variants.
 
-1.  **Step 1: Assess Severity (Standard Ratio)**
-    *   Formula: $Cl^- / (HCO_3^- + CO_3^{2-})$
-    *   **Purpose**: Classifies the water from "Fresh" to "Extremely Saline".
-    *   **Thresholds**:
-        - **< 0.5**: Fresh (Low Salinity)
-        - **0.5 - 1.3**: Slightly Saline
-        - **1.3 - 2.8**: Moderately Saline
-        - **2.8 - 6.6**: Highly Saline
-        - **6.6 - 15.5**: Severely Saline
-        - **> 15.5**: Extremely Saline (Seawater)
+1. **Simpson's Ratio (SR)**:
+    - *Also known as*: Revelle Coefficient.
+    - *Formula*: $Cl^- / (HCO_3^- + CO_3^{2-})$ (all in **meq/L**).
+    - **Severity Classification** (Todd/Simpson):
+        - **< 0.5**: Good quality (no/very low influence)
+        - **0.5 - 1.3**: Slightly contaminated
+        - **1.3 - 2.8**: Moderately contaminated
+        - **2.8 - 6.6**: Injuriously contaminated
+        - **6.6 - 15.5**: Highly contaminated
+        - **> 15.5**: Extremely contaminated (Seawater)
 
-2.  **Step 2: Confirm Mechanism (Inverse Ratio)**
-    *   Formula: $(HCO_3^- + CO_3^{2-}) / Cl^-$
-    *   **Purpose**: Distinguishes between freshwater recharge and saline intrusion.
-    *   **Interpretation**:
-        - **> 1**: Freshwater Recharge (Dominant Bicarbonate)
-        - **< 0.5**: Seawater Influence (Dominant Chloride)
+2. **Freshening Ratio (FR)**:
+    - *Formula*: $(HCO_3^- + CO_3^{2-}) / Cl^-$
+    - **Interpretation**: Large FR indicates freshwater dominance; small FR indicates marine influence.
 
-**Combined Diagnosis**: If the Standard Ratio indicates "Extremely Saline" (> 15.5) AND the Inverse Ratio is low (< 0.5), it confirms **Seawater Intrusion** as the specific cause.
+3. **Base Exchange Index (BEX)**:
+    - **Process Indicator**: Infers whether the system trends toward freshening or salinization.
+    - *Formula*: $BEX = Na^+ + K^+ + Mg^{2+} - 1.0716 \cdot Cl^-$ (meq/L)
+    - **Interpretation**:
+        - **BEX > 0**: Freshening trend (freshening/recharge)
+        - **BEX < 0**: Salinization trend (intrusion/salinization)
+        - **BEX ≈ 0**: No clear base-exchange signal
 
 #### 11.4 WHO Quality Integration
 
@@ -511,6 +539,7 @@ result = inverter.invert(
 
 # 5. Access results & Indices
 print(f"Simpson Class: {result.indices['Simpson_Class']}")
+print(f"BEX Indicator: {result.indices['BEX']}")
 print(f"Inferred Sources: {df_quality['Inferred_Sources']}")
 
 # 6. Export to DataFrame
@@ -545,6 +574,7 @@ if results.mineral_result is not None:
 #### 13.1 Bayesian Inversion
 
 Replace NNLS with **Bayesian NNLS**:
+
 - Prior distributions on $s$ (e.g., log-normal)
 - Posterior samples via MCMC
 - Uncertainty quantification

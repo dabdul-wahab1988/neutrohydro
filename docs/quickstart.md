@@ -71,7 +71,7 @@ The analysis also calculates standard indices automatically:
 
 ```python
 indices = results["indices"]
-print(indices[["Simpson_Class", "Simpson_Ratio_Inverse", "Gibbs_Ratio_1"]].head())
+print(indices[["Simpson_Class", "Freshening_Ratio", "BEX", "Gibbs_Ratio_1"]].head())
 ```
 
 ## 3. Visualization
