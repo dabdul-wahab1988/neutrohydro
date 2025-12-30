@@ -4,7 +4,7 @@
 
 NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in absolute concentration space:
 
-**NDG encoder → PNPLS regression → NVIP decomposition → NSR/$π_G$ attribution → mineral plausibility via stoichiometric inversion**
+**NDG encoder → PNPLS regression → NVIP decomposition → $NSR/π_G$ attribution → mineral plausibility via stoichiometric inversion**
 
 ## Features
 
@@ -191,6 +191,117 @@ where $E_T = VIP_T^2$ and $E_P = VIP_I^2 + VIP_F^2$.
 pip install -e .[dev]
 pytest tests/ -v
 ```
+# NeutroHydro Documentation
+
+## Neutrosophic Chemometrics for Groundwater Analysis
+
+## Table of Contents
+
+### Getting Started
+
+- [Quick Start Guide](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quickstart.md)
+- [Installation](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/installation.md)
+
+### Mathematical Foundations
+
+- [Mathematical Framework Overview](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/mathematical_framework.md)
+- [Preprocessing & Robust Scaling](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/preprocessing.md)
+- [NDG Encoder: Neutrosophic Triplets](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/encoder.md)
+- [PNPLS: Probabilistic Neutrosophic PLS](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/model.md)
+- [NVIP: Variable Importance Decomposition](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/nvip.md)
+- [Attribution: NSR and Baseline Fractions](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/attribution.md)
+- [Mineral Stoichiometric Inversion](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/minerals.md)
+- [Water Quality Assessment](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quality_check.md)
+- [Model Limitations & Validity](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/limitations.md)
+- [Hydrogeochemical Processes](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/hydrogeochemical_processes.md): Mixing, Exchange, Redox
+- [Mathematical Critique](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/mathematical_critique.md): Rigorous review of potential issues
+- [Final Critical Review](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/final_critical_review.md): "Red Team" analysis of validity
+
+### API Reference
+
+- [Pipeline API](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/api_pipeline.md)
+- [Core Modules API](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/api_modules.md)
+
+### Examples & Tutorials
+
+- [Basic Usage Example](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/examples_basic.md)
+- [Advanced Workflows](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/examples_advanced.md)
+- [Interpreting Results](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/interpreting_results.md)
+
+## Overview
+
+NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in **absolute concentration space** (non-compositional):
+
+```text
+Raw Ion Data
+     ↓
+Preprocessing (Robust centering/scaling)
+     ↓
+NDG Encoder (T, I, F triplets)
+     ↓
+PNPLS Regression (Augmented Hilbert space)
+     ↓
+NVIP (Channel-wise variable importance)
+     ↓
+NSR/π_G (Baseline vs perturbation attribution)
+     ↓
+Mineral Inference (Stoichiometric inversion)
+```
+
+## Core Mathematical Innovations
+
+### 1. Neutrosophic Data Representation
+
+Maps each ion concentration to a triplet **(T, I, F)**:
+
+- **T (Truth)**: Baseline/reference component
+- **I (Indeterminacy)**: Uncertainty/ambiguity
+- **F (Falsity)**: Perturbation likelihood
+
+### 2. L2-Additive VIP Decomposition
+
+**Theorem**: Variable importance decomposes additively across channels:
+
+$$VIP_{agg}^2(j) = VIP_T^2(j) + VIP_I^2(j) + VIP_F^2(j)$$
+
+This allows **unambiguous attribution** of prediction importance to baseline vs. perturbation sources.
+
+### 3. Non-Compositional Framework
+
+Unlike compositional data analysis (CoDa), NeutroHydro operates in **absolute concentration space**, preserving:
+
+- Physical interpretability
+- Additive mixing models
+- Direct stoichiometric constraints
+
+### 4. Hybrid Geochemical-Statistical Engine
+
+Combines rigorous mathematical optimization with expert hydrogeochemical heuristics:
+
+- **Context-Aware Inversion**: Uses **WHO Quality Flags** and **Gibbs Diagrams** to dynamically constrain the mineral solver.
+- **Redox Detection**: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry.
+- **Advanced Indices**: Integrated **Simpson's Ratio** (Standard & Inverse) for precise salinity diagnosis (Seawater vs. Recharge).
+
+**For Developers:**
+
+- Contributing? → See `CONTRIBUTING.md` in repo root
+- Testing? → See `tests/` directory
+
+## Citation
+
+If you use NeutroHydro in your research, please cite:
+
+```bibtex
+@software{neutrohydro,
+  title = {NeutroHydro: Neutrosophic Chemometrics for Groundwater Analysis},
+  year = {2024},
+     url = {https://github.com/dabdul-wahab1988/neutrohydro}
+}
+```
+
+## License
+
+MIT License - see LICENSE file for details.
 
 ## License
 
