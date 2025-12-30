@@ -61,6 +61,10 @@ class PipelineConfig:
     mineral_tau_s: float = 0.01
     mineral_tau_r: float = 1.0
 
+    # Thermodynamic validation
+    run_thermodynamic_validation: bool = False
+    si_threshold: float = 0.5
+
 
 @dataclass
 class PipelineResults:
@@ -130,6 +134,9 @@ class NeutroHydroPipeline:
         feature_names: Optional[list[str]] = None,
         groups: Optional[NDArray[np.integer]] = None,
         c_meq: Optional[NDArray[np.floating]] = None,
+        pH: Optional[NDArray[np.floating]] = None,
+        Eh: Optional[NDArray[np.floating]] = None,
+        temp: float = 25.0,
     ) -> PipelineResults:
         """
         Fit the complete pipeline.
@@ -147,6 +154,12 @@ class NeutroHydroPipeline:
         c_meq : ndarray of shape (n_samples, n_ions), optional
             Ion concentrations in meq/L for mineral inference.
             If None and mineral inference is requested, uses X directly.
+        pH : ndarray of shape (n_samples,), optional
+            pH values for thermodynamic validation.
+        Eh : ndarray of shape (n_samples,), optional
+            Redox (Eh) values in mV for thermodynamic validation.
+        temp : float, default=25.0
+            Temperature in Celsius for thermodynamic validation.
 
         Returns
         -------
@@ -215,7 +228,15 @@ class NeutroHydroPipeline:
             )
             # Match ion dimensions
             if c_meq.shape[1] == len(inverter.ion_names):
-                mineral_result = inverter.invert(c_meq, nsr.pi_G)
+                mineral_result = inverter.invert(
+                    c_meq, 
+                    nsr.pi_G,
+                    use_thermodynamics=self.config.run_thermodynamic_validation,
+                    pH=pH,
+                    Eh=Eh,
+                    temp=temp,
+                    si_threshold=self.config.si_threshold
+                )
 
         self.results_ = PipelineResults(
             preprocessor=preprocessor,

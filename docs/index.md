@@ -86,6 +86,7 @@ Unlike compositional data analysis (CoDa), NeutroHydro operates in **absolute co
 Combines rigorous mathematical optimization with expert hydrogeochemical heuristics:
 
 - **Context-Aware Inversion**: Uses **WHO Quality Flags** and **Gibbs Diagrams** to dynamically constrain the mineral solver.
+- **Thermodynamic Validation**: Integrated **PHREEQC** engine for Saturation Index (SI) calculation and redox-aware speciation (Eh) to ensure identified mineral assemblages are physically realistic.
 - **Redox Detection**: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry.
 - **Advanced Indices**: Integrated **Simpson's Ratio** (Revelle Coefficient) and **Base Exchange Index (BEX)** for precise salinity and freshening diagnosis.
 

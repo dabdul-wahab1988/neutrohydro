@@ -17,9 +17,19 @@ class NeutroHydroPipeline:
         """
         ...
 
-    def fit(self, df: pd.DataFrame):
+    def fit(self, X, y, feature_names=None, groups=None, c_meq=None, pH=None, Eh=None, temp=25.0):
         """
-        Fit the internal models (Scaler, Encoder, PNPLS) to the data.
+        Fit the internal models and optionally perform mineral inference.
+        
+        Args:
+            X: Predictor matrix (samples x features)
+            y: Target variable
+            feature_names: Optional list of feature names
+            groups: Optional grouping variable for cross-validation
+            c_meq: Ion concentrations in meq/L for mineral inference
+            pH: pH values for thermodynamic validation
+            Eh: Redox potential (mV) for thermodynamic validation
+            temp: Temperature (Celsius) for thermodynamic validation
         """
         ...
 

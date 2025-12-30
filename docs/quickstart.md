@@ -27,17 +27,29 @@ from neutrohydro import NeutroHydroPipeline
 df = pd.read_csv("data.csv")
 
 # 2. Initialize Pipeline
-# 'target_ions' are the ions you want to model/predict (usually all major ions)
-pipeline = NeutroHydroPipeline(
-    target_ions=["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
-)
+pipeline = NeutroHydroPipeline()
 
-# 3. Fit the Model
-# The pipeline automatically handles preprocessing and encoding
-pipeline.fit(df)
+# 3. Fit the Model with Thermodynamic Validation
+from neutrohydro.pipeline import PipelineConfig
+
+# Prepare data
+feature_cols = ["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
+X = df[feature_cols].values
+y = df["TDS"].values  # Example target
+pH = df["pH"].values
+Eh = df["Eh"].values
+
+# Optional: Configure thermodynamic validation
+config = PipelineConfig(run_thermodynamic_validation=True)
+pipeline = NeutroHydroPipeline(config=config)
+
+# Prepare ion data for inversion (in meq/L)
+c_meq = df[feature_cols].values # Simplified
+
+# Fit with ion data and redox parameters
+pipeline.fit(X, y, c_meq=c_meq, pH=pH, Eh=Eh)
 
 # 4. Get Results
-# This returns a dictionary containing all analysis outputs
 results = pipeline.analyze(df)
 
 # 5. Access Specific Outputs
@@ -59,10 +71,10 @@ NeutroHydro can use water quality flags (like WHO exceedances) to constrain the 
 
 ```python
 # The pipeline does this automatically if you use the .analyze() method.
-# You can access the quality assessment directly:
+# If thermodynamic validation is enabled, 'Thermo-Plausible' flags are added.
 
 quality_df = results["quality_flags"]
-print(quality_df[["Exceedances", "Inferred_Sources"]].head())
+print(results["mineral_fractions"]) # Includes SI and Thermo-Plausibility
 ```
 
 ### Hydrogeochemical Indices

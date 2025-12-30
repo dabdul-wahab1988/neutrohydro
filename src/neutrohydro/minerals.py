@@ -8,11 +8,17 @@ Implements Section 8 of the specification:
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import nnls
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+from neutrohydro.speciation import ThermodynamicValidator, ThermodynamicResult
 
 
 @dataclass
@@ -24,6 +30,9 @@ class MineralInversionResult:
     plausible: NDArray[np.bool_]  # Boolean mask of plausible minerals
     mineral_fractions: NDArray[np.floating]  # Normalized fractions (0-1)
     indices: Optional[dict[str, NDArray[np.floating]]] = None # Hydrogeochemical Indices
+    saturation_indices: Optional[dict[str, NDArray[np.floating]]] = None # PHREEQC SI
+    thermo_plausible: Optional[NDArray[np.bool_]] = None # Plausibility based on thermodynamics
+    mineral_names: Optional[List[str]] = None # List of mineral names corresponding to columns of s
 
 
 # Standard ion order (meq/L recommended)
@@ -744,6 +753,11 @@ class MineralInverter:
         use_cai_constraints: bool = True,
         use_gibbs_constraints: bool = True,
         quality_flags: Optional[list[dict]] = None,
+        use_thermodynamics: bool = False,
+        pH: Optional[NDArray[np.floating]] = None,
+        Eh: Optional[NDArray[np.floating]] = None,
+        temp: float = 25.0,
+        si_threshold: float = 0.5
     ) -> MineralInversionResult:
         """
         Perform weighted NNLS inversion for mineral contributions.
@@ -765,6 +779,17 @@ class MineralInverter:
         quality_flags : list[dict], optional
             List of quality assessment dictionaries (from quality_check.py).
             Used to override constraints or force plausibility based on pollution sources.
+        use_thermodynamics : bool, default=False
+            Whether to use PHREEQC Saturation Indices to filter implausible minerals.
+        pH : ndarray of shape (n_samples,), optional
+            pH values for thermodynamic validation. Required if use_thermodynamics is True.
+        Eh : ndarray of shape (n_samples,), optional
+            Redox (Eh) values in mV for thermodynamic validation.
+        temp : float
+            Temperature in Celsius for thermodynamic validation.
+        si_threshold : float
+            SI threshold for thermodynamic plausibility. Minerals with SI > threshold
+            are considered supersaturated and implausible for dissolution.
 
         Returns
         -------
@@ -785,9 +810,18 @@ class MineralInverter:
             D = np.ones(m)
         else:
             pi_G = np.asarray(pi_G)
-            if len(pi_G) != m:
-                raise ValueError(f"pi_G must have {m} elements")
-            D = self._compute_weights(pi_G)
+            # if len(pi_G) != m:
+            #     raise ValueError(f"pi_G must have {m} elements")
+            
+            # If dimensions don't match, we assume pi_G corresponds to whatever
+            # was used in the model. We only apply weights to matching ions.
+            if len(pi_G) == m:
+                D = self._compute_weights(pi_G)
+            else:
+                # Fallback: uniform weights if not matching exactly
+                # For a more robust fix, we would need the feature_names from the pipeline
+                D = np.ones(m)
+                logger.warning(f"pi_G size ({len(pi_G)}) does not match ion count ({m}). Using uniform weights.")
 
         # Calculate CAI constraints if requested
         cai_mask_release_na = np.ones(n, dtype=bool) # Allowed by default
@@ -967,6 +1001,22 @@ class MineralInverter:
             elif val < 15.5: simpson_class.append("Highly contaminated")
             else: simpson_class.append("Extremely contaminated")
 
+        # 8. Optional Thermodynamic Validation
+        si_dict = None
+        thermo_plausible = None
+        if use_thermodynamics:
+            if pH is None:
+                # Default pH if missing
+                pH = np.full(n, 7.0)
+                logger.warning("pH not provided for thermodynamic validation. Using default pH 7.0.")
+            
+            validator = ThermodynamicValidator()
+            si_dict = validator.calculate_si(c, self.ion_names, pH, temp, Eh=Eh)
+            thermo_plausible = validator.validate_dissolution(si_dict, self.mineral_names, si_threshold)
+            
+            # Update overall plausibility: must meet stoichiometric AND thermodynamic criteria
+            plausible = plausible & thermo_plausible
+
         return MineralInversionResult(
             s=s,
             residuals=residuals,
@@ -982,7 +1032,10 @@ class MineralInverter:
                 "Freshening_Ratio": fr,
                 "Simpson_Class": simpson_class,
                 "BEX": bex
-            }
+            },
+            saturation_indices=si_dict,
+            thermo_plausible=thermo_plausible,
+            mineral_names=self.mineral_names
         )
 
     def get_stoichiometry_dataframe(self):

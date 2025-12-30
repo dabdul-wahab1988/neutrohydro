@@ -157,6 +157,7 @@
 	
 	\begin{itemize}
 		\item \textbf{Context-Aware Inversion}: Uses WHO Quality Flags and Gibbs Diagrams to dynamically constrain the mineral solver
+		\item \textbf{Thermodynamic Validation}: Integrated \textbf{PHREEQC} engine for Saturation Index (SI) calculation and redox-aware speciation (Eh)
 		\item \textbf{Redox Detection}: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry
 		\item \textbf{Advanced Indices}: Integrated Simpson's Ratio (Revelle Coefficient), Freshening Ratio (FR), and Base Exchange Index (BEX) for precise salinity and process diagnosis
 	\end{itemize}
@@ -198,17 +199,19 @@
 		df = pd.read_csv("data.csv")
 		
 		# 2. Initialize Pipeline
-		# 'target_ions' are the ions you want to model/predict
-		pipeline = NeutroHydroPipeline(
-		target_ions=["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
-		)
+		pipeline = NeutroHydroPipeline()
 		
-		# 3. Fit the Model
-		# The pipeline automatically handles preprocessing and encoding
-		pipeline.fit(df)
+		# 3. Fit the Model with PHREEQC Validation
+		# X: predictor matrix, y: target variable
+		# c_meq: ion concentrations for mineral solver
+		feature_cols = ["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
+		X = df[feature_cols].values
+		y = df["TDS"].values
+		c_meq = df[feature_cols].values
+		
+		pipeline.fit(X, y, c_meq=c_meq, pH=df['pH'], Eh=df['Eh'])
 		
 		# 4. Get Results
-		# This returns a dictionary containing all analysis outputs
 		results = pipeline.analyze(df)
 		
 		# 5. Access Specific Outputs
@@ -981,6 +984,32 @@
 		\caption{Standard mineral library}
 	\end{table}
 	
+	\subsection{Thermodynamic Validation (PHREEQC)}
+	
+	NeutroHydro integrates the \textbf{PHREEQC} geochemical engine (via \texttt{phreeqpython}) to ensure identified mineral assemblages are physically realistic.
+	
+	\subsubsection{Saturation Index (SI)}
+	
+	For each mineral identified by the NNLS solver, the validator calculates its Saturation Index:
+	\begin{equation}
+		SI = \log\left(\frac{IAP}{K_{sp}}\right)
+	\end{equation}
+	
+	where $IAP$ is the Ion Activity Product and $K_{sp}$ is the solubility product. A mineral is considered \textbf{plausible for dissolution} only if $SI \leq \tau_{SI}$ (default: 0.5).
+	
+	\subsubsection{Redox and pH Integration}
+	
+	The validation considers the system's pH and redox potential ($Eh$ or $pe$). If $Eh$ (in mV) is provided, it is converted to $pe$ using the relationship:
+	\begin{equation}
+		pe = \frac{Eh(\text{mV})}{59.16 \cdot (T_{K}/298.15)}
+	\end{equation}
+	
+	This allows for precise thermodynamic checks of redox-sensitive minerals like Nitrates ($N(5)$) and Sulfates ($S(6)$).
+	
+	\subsubsection{Robust Initialization and Fallbacks}
+	
+	The system automatically attempts to load \texttt{wateq4f.dat} for superior trace metal support, falling back to \texttt{phreeqc.dat} if necessary. If common phases (e.g., Sylvite, Niter) are missing from specialized databases, they are programmatically injected into the in-memory PHREEQC environment to ensure SI calculation coverage.
+	
 	\newpage
 	
 	\section{Water Quality Assessment}
@@ -1114,13 +1143,13 @@
 		\item Cross-validate with saturation indices
 	\end{itemize}
 	
-	\subsubsection{Thermodynamic Blindness}
+	\subsubsection{Thermodynamic Blindness (Addressed)}
 	
-	\textbf{Issue:} The model is mass balance-based, not thermodynamic.
+	\textbf{Status:} Integrated via PHREEQC.
 	
-	\textbf{Implication:} It can propose minerals that are thermodynamically unfavorable.
+	\textbf{Old Issue:} The model was purely mass balance-based.
 	
-	\textbf{Recommendation:} Validate results with PHREEQC or similar equilibrium codes.
+	\textbf{Current Solution:} NeutroHydro now performs optional saturation index (SI) checks for every identified mineral. If a mineral is suggested to dissolve but is already supersaturated in the water ($SI > 0.5$), it is flagged as thermodynamically implausible.
 	
 	\subsubsection{Conservative Chloride Assumption}
 	
@@ -1181,14 +1210,16 @@
 		"""
 		...
 		
-		def fit(self, df: pd.DataFrame):
+		def fit(self, X, y, feature_names=None, c_meq=None, pH=None, Eh=None, temp=25.0):
 		"""
-		Fit the internal models (Scaler, Encoder, PNPLS) to the data.
+		Fit models and perform mineral inference with validation.
 		
 		Parameters
 		----------
-		df : pd.DataFrame
-		Input data with ion concentrations
+		X, y : Predictors and target
+		c_meq : Ion concentrations (meq/L)
+		pH, Eh : Groundwater parameters for PHREEQC
+		temp : Temperature in Celsius
 		"""
 		...
 		
@@ -1300,8 +1331,8 @@
 		# Initialize pipeline
 		pipeline = NeutroHydroPipeline(target_ions=ions)
 		
-		# Fit and analyze
-		pipeline.fit(df)
+		# Fit and analyze with pH/Eh data
+		pipeline.fit(X, y, c_meq=c_meq, pH=df['pH'], Eh=df['Eh'])
 		results = pipeline.analyze(df)
 		
 		# Display VIP scores

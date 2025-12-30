@@ -203,6 +203,8 @@ These phases are used to fingerprint specific contamination sources.
 | **Borax** | Na₂B₄O₇ | Na⁺, B | Detergent/Wastewater marker |
 | **Malachite** | Cu₂CO₃(OH)₂ | Cu²⁺, HCO₃⁻ | Pesticide/Industrial marker |
 
+**Robust Mapping**: The software automatically handles variations in mineral naming across different databases. For instance, `Dolomite` will match `Dolomite`, `Dolomite(d)`, or `Dolomite-ord` depending on the active PHREEQC database. Similarly, `K-feldspar` matches `Adularia` and `K-feldspar`.
+
 #### 4.3 Redox Phases (Optional)
 
 These phases represent biogeochemical sinks (mass loss) or sources (mass gain) driven by redox reactions. They are not enabled by default but can be added for advanced modeling.
@@ -243,6 +245,7 @@ The `MineralInverter` and pipeline are designed to handle datasets with varying 
 - Ion vector $c_i \in \mathbb{R}^m$ (in meq/L)
 - Stoichiometric matrix $A \in \mathbb{R}^{m \times K}$
 - Baseline fractions $\pi_G \in \mathbb{R}^m$ (optional)
+- **pH and Eh (optional)**: For thermodynamic validation.
 - Hyperparameters $\eta, \tau_s, \tau_r$
 
 **Output**:
@@ -509,6 +512,18 @@ The inversion can be "helped" by the **Quality Assessment** module (`neutrohydro
 
 This allows the model to be **context-aware**, adapting its constraints based on the specific pollution signature of each sample.
 
+#### 11.5 Thermodynamic Validation (PHREEQC)
+
+NeutroHydro integrates **PHREEQC** (via `phreeqpython`) to ensure identified mineral assemblages are thermodynamically plausible.
+
+- **Saturation Index (SI)**: For each identified mineral, the model calculates its Saturation Index: $SI = \log(IAP / K_{sp})$.
+- **Plausibility Rule**: A mineral is only considered plausible for **dissolution** if it is not supersaturated ($SI \leq \text{threshold}$, default 0.5).
+- **Redox Support (Eh)**: The validator accepts $Eh$ (mV) and converts it to $pe$ based on temperature ($pe = Eh / (59.16 \cdot T_{K} / 281.15)$), allowing for accurate speciation of Nitrogen and Sulfur minerals in reducing or oxidizing environments.
+- **Auto-Injection (Fallbacks)**: Some specialized databases (like `wateq4f.dat`) omit common phases like Sylvite or Nitrates. NeutroHydro automatically injects these phases into the PHREEQC memory at runtime to ensure SI calculations never fail for standard minerals.
+- **Scientific Rigor**: This prevents the model from proposing "mathematically correct but physically impossible" solutions where a mineral is suggested to dissolve into water that is already supersaturated with it.
+
+The package includes bundled databases (`wateq4f.dat`, `minteq.dat`, `phreeqc.dat`) to support the full trace metal library.
+
 ### 12. Usage Example
 
 ```python
@@ -534,6 +549,9 @@ result = inverter.invert(
     c_meq, 
     use_cai_constraints=True,
     use_gibbs_constraints=True,
+    use_thermodynamics=True,
+    pH=df['pH'].values,
+    Eh=df['Eh'].values,         # Optional redox support
     quality_flags=quality_flags  # <--- Context-aware override
 )
 
@@ -562,7 +580,7 @@ config = PipelineConfig(
 )
 
 pipeline = NeutroHydroPipeline(config)
-results = pipeline.fit(X, y, c_meq=c_meq)  # Pass ion data in meq/L
+results = pipeline.fit(X, y, c_meq=c_meq, pH=pH, Eh=Eh)  # Pass ion and redox data
 
 # Mineral results available
 if results.mineral_result is not None:
