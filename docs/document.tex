@@ -29,7 +29,7 @@
 \fancyhf{}
 \fancyhead[L]{NeutroHydro Technical Documentation}
 \fancyhead[R]{\thepage}
-\fancyfoot[C]{Neutrosophic Chemometrics for Groundwater Analysis}
+\fancyfoot[C]{Neutralization-Displacement Geosystem (NDG) Framework}
 
 % Code listing style
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -83,22 +83,23 @@
 	urlcolor=cyan,
 	pdftitle={NeutroHydro Technical Documentation},
 	pdfauthor={},
-	pdfsubject={Neutrosophic Chemometrics},
+	pdfsubject={Neutralization-Displacement Geosystem (NDG)},
 	pdfkeywords={groundwater, chemometrics, neutrosophic logic}
 }
 
 % Title information
 \title{\textbf{NeutroHydro: Complete Technical Documentation}\\
-	\Large Neutrosophic Chemometrics for Groundwater Analysis}
+	\Large Universal Neutralization-Displacement Geosystem (NDG) Framework\\
+	\large with Stoichiometric Inversion and Thermodynamic Validation}
 \author{}
-\date{December 28, 2025}
+\date{December 31, 2025}
 
 \begin{document}
 	
 	\maketitle
 	
 	\begin{abstract}
-		NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in absolute concentration space. The framework combines neutrosophic logic with partial least squares regression to analyze groundwater chemistry, providing unambiguous attribution of prediction importance to baseline versus perturbation sources. This document presents the complete mathematical foundations, implementation details, and usage guidelines for the NeutroHydro framework.
+		NeutroHydro implements a mathematically well-posed and geologically rigorous workflow for groundwater chemometrics in absolute concentration space. The framework combines Neutralization-Displacement Geosystem (NDG) theory with partial least squares regression and thermodynamic constraints to analyze groundwater chemistry. Unlike purely statistical approaches, NeutroHydro enforces "Geological Meaningfulness" through strict quality checks, thermodynamic validation, and universal geochemical modules (Redox, Pollution, Salinity). This document presents the complete mathematical foundations, implementation details, and usage guidelines for the Universal NDG Framework.
 	\end{abstract}
 	
 	\tableofcontents
@@ -109,13 +110,14 @@
 	NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in \textbf{absolute concentration space} (non-compositional). The complete workflow follows this structure:
 	
 	\begin{enumerate}
-		\item Raw Ion Data
-		\item Preprocessing (Robust centering/scaling)
-		\item NDG Encoder (T, I, F triplets)
-		\item PNPLS Regression (Augmented Hilbert space)
-		\item NVIP (Channel-wise variable importance)
-		\item NSR/$\pi_G$ (Baseline vs perturbation attribution)
-		\item Mineral Inference (Stoichiometric inversion)
+		\item \textbf{Data Ingestion \& Quality Control} (Completeness, Balance, Sanity Checks)
+		\item \textbf{Preprocessing} (Robust centering/scaling)
+		\item \textbf{NDG Encoder} (T, I, F triplets)
+		\item \textbf{PNPLS Regression} (Augmented Hilbert space)
+		\item \textbf{NVIP} (Channel-wise variable importance)
+		\item \textbf{NSR/$\pi_G$} (Baseline vs perturbation attribution)
+		\item \textbf{Universal Geochemical Modules} (Redox, Pollution, Salinity)
+		\item \textbf{Mineral Inference} (Stoichiometric inversion with Thermodynamic Validation)
 	\end{enumerate}
 	
 	\subsection{Core Mathematical Innovations}
@@ -156,25 +158,89 @@
 	The framework combines rigorous mathematical optimization with expert hydrogeochemical heuristics:
 	
 	\begin{itemize}
-		\item \textbf{Context-Aware Inversion}: Uses WHO Quality Flags and Gibbs Diagrams to dynamically constrain the mineral solver
-		\item \textbf{Thermodynamic Validation}: Integrated \textbf{PHREEQC} engine for Saturation Index (SI) calculation and redox-aware speciation (Eh)
-		\item \textbf{Redox Detection}: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry
-		\item \textbf{Advanced Indices}: Integrated Simpson's Ratio (Revelle Coefficient), Freshening Ratio (FR), and Base Exchange Index (BEX) for precise salinity and process diagnosis
+		\item \textbf{Context-Aware Inversion}: Uses WHO Quality Flags and Gibbs Diagrams to dynamically constrain the mineral solver.
+		\item \textbf{Thermodynamic Validation}: Integrated \textbf{PHREEQC}-style engine checks Saturation Indices (SI). The model rejects mineral phases that are thermodynamically impossible (e.g., dissolution of supersaturated Calcite), preventing "mathematically correct but geologically meaningless" results.
+		\item \textbf{Redox Detection}: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry and redox-sensitive species (NO$_3$, Fe, Mn).
 	\end{itemize}
+
+	\subsubsection{Universal Geochemical Modules}
+	
+	NeutroHydro integrates three specialized modules to handle complex hydrogeochemical scenarios:
+	
+	\begin{enumerate}
+		\item \textbf{Pollution Fingerprinting}: Distinguishes sources using ratio logic:
+		\begin{itemize}
+			\item \textbf{Chemical Fertilizer}: $NO_3/Cl > 1.0$
+			\item \textbf{Sewage/Manure}: $0.05 < NO_3/Cl < 1.0$ AND High $Cl$ ($> 1.0$ meq/L)
+			\item \textbf{Potash Impact}: $K/Na > 0.2$
+		\end{itemize}
+		\item \textbf{Salinity Origin}: Uses the Revelle Index (Simpson Ratio) and Base Exchange Index (BEX) to distinguish Marine Intrusion from Evaporite Dissolution and Anthropogenic Salinization.
+		\item \textbf{Redox Zonation}: Classifies samples into Oxic, Suboxic, or Anoxic zones based on $Eh$, $DO$, $NO_3$, $Fe$, and $Mn$ thresholds.
+	\end{enumerate}
+	
+	\section{Installation}
+	
+	NeutroHydro requires Python 3.9 or higher.
+	
+	\subsection{From PyPI}
+	\begin{lstlisting}[language=bash]
+		pip install neutrohydro
+	\end{lstlisting}
+	
+	\subsection{From Source}
+	\begin{lstlisting}[language=bash]
+		git clone https://github.com/yourusername/neutrohydro.git
+		cd neutrohydro
+		pip install -e .
+	\end{lstlisting}
 	
 	\newpage
 	
 	\section{Quick Start Guide}
 	
-	This section provides a practical introduction to using NeutroHydro for groundwater analysis.
+	This section provides a practical introduction to using NeutroHydro for groundwater analysis. The primary interface is the **Command Line Interface (CLI)**, which includes a "Wizard Mode" for guided analysis.
 	
-	\subsection{Basic Workflow}
+	\subsection{Interactive Wizard Mode}
 	
-	The core of NeutroHydro is the \texttt{NeutroHydroPipeline} class. It handles preprocessing, encoding, model training, and mineral inversion in a single integrated workflow.
+	The easiest way to start is to use the interactive wizard:
 	
-	\subsubsection{Preparing Your Data}
+	\begin{lstlisting}[language=bash, caption={Starting the Wizard}]
+		neutrohydro
+	\end{lstlisting}
 	
-	Prepare a CSV file with your ion concentrations. The columns should match standard chemical symbols (e.g., \texttt{Ca}, \texttt{Mg}, \texttt{Na}, \texttt{HCO3}, \texttt{Cl}, \texttt{SO4}).
+	Select **"1. Wizard Mode (Guided Workflow)"** from the menu. The wizard will guide you through:
+	\begin{enumerate}
+		\item Loading your CSV data.
+		\item Mapping columns to standard ions (Ca, Mg, Na, etc.).
+		\item Running Quality Checks (Sanity Check).
+		\item Configuring the pipeline (Target variable, Baseline type).
+		\item Generating Interpretation Reports and Visualizations.
+	\end{enumerate}
+	
+	\subsection{Command Line Usage}
+	
+	For automated workflows or advanced users, use the `run` command:
+	
+	\begin{lstlisting}[language=bash, caption={Full pipeline run command}]
+		neutrohydro run data.csv \
+		--target TDS \
+		--groups Aquifer_Zone \
+		--minerals \
+		--validate-thermo \
+		--verbose
+	\end{lstlisting}
+	
+	\textbf{Key Arguments:}
+	\begin{itemize}
+		\item \texttt{--target}: The variable to predict (e.g., TDS, EC).
+		\item \texttt{--groups}: Column for aquifer/hydrofacies grouping (handles heterogeneity).
+		\item \texttt{--minerals}: Enable stoichiometric mineral inversion.
+		\item \texttt{--validate-thermo}: Enable thermodynamic plausibility checks (requires pH/Temp).
+	\end{itemize}
+	
+	\subsection{Data Preparation}
+	
+	Prepare a CSV file with your ion concentrations (mg/L). The columns should match standard chemical symbols.
 	
 	\begin{table}[H]
 		\centering
@@ -188,10 +254,11 @@
 		\end{tabular}
 		\caption{Example ion concentration data (mg/L)}
 	\end{table}
+\subsection{Python API Usage}
 	
-	\subsubsection{Running the Pipeline}
+	For integration into custom scripts or Jupyter notebooks:
 	
-	\begin{lstlisting}[caption={Basic pipeline usage example}]
+	\begin{lstlisting}[language=Python, caption={Basic Python API workflow}]
 		import pandas as pd
 		from neutrohydro import NeutroHydroPipeline
 		
@@ -201,28 +268,28 @@
 		# 2. Initialize Pipeline
 		pipeline = NeutroHydroPipeline()
 		
-		# 3. Fit the Model with PHREEQC Validation
-		# X: predictor matrix, y: target variable
-		# c_meq: ion concentrations for mineral solver
-		feature_cols = ["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4", "NO3"]
-		X = df[feature_cols].values
-		y = df["TDS"].values
-		c_meq = df[feature_cols].values
+		# 3. Fit the Model
+		# Define features (ions) and target (e.g., TDS)
+		features = ["Ca", "Mg", "Na", "K", "HCO3", "Cl", "SO4"]
+		X = df[features]
+		y = df["TDS"]
 		
-		pipeline.fit(X, y, c_meq=c_meq, pH=df['pH'], Eh=df['Eh'])
+		# Fit with optional geochemical parameters
+		pipeline.fit(
+		X=X, 
+		y=y, 
+		c_meq=df[features],  # Required for mineral inversion
+		pH=df.get('pH'),     # Optional: for saturation indices
+		groups=df.get('Zone') # Optional: for heterogeneous aquifers
+		)
 		
-		# 4. Get Results
+		# 4. Run Analysis
 		results = pipeline.analyze(df)
 		
-		# 5. Access Specific Outputs
-		print("Variable Importance (VIP):")
-		print(results["vip_scores"])
-		
-		print("\nMineral Contributions (First Sample):")
-		print(results["mineral_fractions"].iloc[0])
-		
-		print("\nWater Quality Flags:")
-		print(results["quality_flags"].iloc[0])
+		# 5. Access Results
+		print(results["vip_scores"])       # Variable Importance
+		print(results["mineral_fractions"]) # Mineral contributions
+		print(results["quality_flags"])     # Water quality assessment
 	\end{lstlisting}
 	
 	\subsection{Advanced Features}
@@ -1197,29 +1264,36 @@
 	
 	\begin{lstlisting}[caption={NeutroHydroPipeline class definition}]
 		class NeutroHydroPipeline:
-		def __init__(self, target_ions: list[str], **kwargs):
+		def __init__(self, config: Optional[PipelineConfig] = None):
 		"""
 		Initialize the pipeline.
 		
 		Parameters
 		----------
-		target_ions : list[str]
-		List of ions to model (e.g., ['Ca', 'Mg', 'Na', ...])
-		**kwargs : dict
-		Additional parameters for encoder, model, etc.
+		config : PipelineConfig, optional
+		Configuration object for hyperparameters (e.g., n_components, baseline_type).
+		If None, default settings are used.
 		"""
 		...
 		
-		def fit(self, X, y, feature_names=None, c_meq=None, pH=None, Eh=None, temp=25.0):
+		def fit(self, X, y, feature_names=None, c_meq=None, pH=None, Eh=None, groups=None):
 		"""
 		Fit models and perform mineral inference with validation.
 		
 		Parameters
 		----------
-		X, y : Predictors and target
-		c_meq : Ion concentrations (meq/L)
-		pH, Eh : Groundwater parameters for PHREEQC
-		temp : Temperature in Celsius
+		X : array-like
+		Predictor matrix (ion concentrations).
+		y : array-like
+		Target variable.
+		feature_names : list[str], optional
+		Names of the predictor variables.
+		c_meq : array-like, optional
+		Ion concentrations in meq/L (required for mineral inversion).
+		pH, Eh : array-like, optional
+		Groundwater parameters for thermodynamic validation.
+		groups : array-like, optional
+		Group labels for heterogeneous aquifers (e.g., 'Zone A', 'Zone B').
 		"""
 		...
 		
@@ -1230,7 +1304,7 @@
 		Parameters
 		----------
 		df : pd.DataFrame
-		Input data with ion concentrations
+		Input data with ion concentrations.
 		
 		Returns
 		-------
@@ -1238,7 +1312,7 @@
 		A dictionary containing:
 		- 'vip_scores': Variable Importance
 		- 'mineral_fractions': Mineral inversion results
-		- 'quality_flags': WHO assessment
+		- 'quality_flags': Water quality assessment
 		- 'indices': Hydrogeochemical indices
 		"""
 		...
@@ -1529,8 +1603,8 @@
 	
 	\begin{verbatim}
 		@software{neutrohydro,
-			title = {NeutroHydro: Neutrosophic Chemometrics 
-				for Groundwater Analysis},
+			title = {NeutroHydro: Neutralization-Displacement Geosystem (NDG) 
+				Framework},
 			year = {2024},
 			url = {https://github.com/dabdul-wahab1988/neutrohydro}
 		}

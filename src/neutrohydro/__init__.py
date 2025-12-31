@@ -1,5 +1,5 @@
 """
-NeutroHydro: Neutrosophic Chemometrics for Groundwater Analysis
+NeutroHydro: Neutralization-Displacement Geosystem (NDG) Framework
 
 This package implements:
 - NDG encoder: Maps scalar values to neutrosophic triplets (T, I, F)
@@ -16,6 +16,19 @@ from neutrohydro.nvip import compute_nvip, NVIPResult
 from neutrohydro.attribution import compute_nsr, compute_sample_baseline_fraction
 from neutrohydro.minerals import MineralInverter, STANDARD_MINERALS
 from neutrohydro.pipeline import NeutroHydroPipeline
+from neutrohydro.visualization import (
+    plot_gibbs,
+    plot_ilr_classification,
+    plot_correlation_matrix,
+    plot_mineral_fractions,
+    plot_saturation_indices,
+    plot_vip_decomposition,
+    generate_report,
+    mg_to_meq,
+    classify_water_type,
+    create_figure,
+    PRESETS,
+)
 
 __version__ = "1.0.0"
 __author__ = "Dickson Abdul-Wahab"
@@ -32,6 +45,18 @@ __all__ = [
     "compute_nvip",
     "compute_nsr",
     "compute_sample_baseline_fraction",
+    # Visualization
+    "plot_gibbs",
+    "plot_ilr_classification",
+    "plot_correlation_matrix",
+    "plot_mineral_fractions",
+    "plot_saturation_indices",
+    "plot_vip_decomposition",
+    "generate_report",
+    "mg_to_meq",
+    "classify_water_type",
+    "create_figure",
+    "PRESETS",
     # Data structures
     "NVIPResult",
     "STANDARD_MINERALS",

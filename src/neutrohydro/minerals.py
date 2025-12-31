@@ -30,9 +30,13 @@ class MineralInversionResult:
     plausible: NDArray[np.bool_]  # Boolean mask of plausible minerals
     mineral_fractions: NDArray[np.floating]  # Normalized fractions (0-1)
     indices: Optional[dict[str, NDArray[np.floating]]] = None # Hydrogeochemical Indices
+    pollution_indices: Optional[dict[str, NDArray[np.floating]]] = None # Pollution Fingerprints
+    redox_state: Optional[NDArray[np.str_]] = None # Redox Zonation (Oxic/Suboxic/Anoxic)
+    salinity_indices: Optional[dict[str, NDArray[np.floating]]] = None # Salinity Origin Indices
     saturation_indices: Optional[dict[str, NDArray[np.floating]]] = None # PHREEQC SI
     thermo_plausible: Optional[NDArray[np.bool_]] = None # Plausibility based on thermodynamics
     mineral_names: Optional[List[str]] = None # List of mineral names corresponding to columns of s
+    water_types: Optional[List[str]] = None # Dominant water type per sample
 
 
 # Standard ion order (meq/L recommended)
@@ -117,6 +121,190 @@ def calculate_cai(
     cai2 = numerator / denom2
 
     return cai1, cai2
+
+
+def calculate_redox_state(
+    c: NDArray[np.floating],
+    ion_names: list[str]
+) -> list[str]:
+    """
+    Determine Redox Zonation (Oxic, Suboxic, Anoxic).
+    
+    Logic:
+    - Oxic: High NO3 (> 1 mg/L ~ 0.016 meq/L), Low Fe/Mn.
+    - Suboxic: Low NO3, Low Fe/Mn.
+    - Anoxic: Low NO3, High Fe (> 0.1 mg/L) or Mn.
+    
+    Note: Thresholds are approximate.
+    NO3 (mg/L) -> meq/L: / 62
+    Fe (mg/L) -> meq/L: / 55.85 * valence (assume 2) -> / 27.9
+    
+    Parameters
+    ----------
+    c : ndarray
+        Concentrations in meq/L.
+    ion_names : list[str]
+        List of ion names.
+        
+    Returns
+    -------
+    states : list[str]
+        List of redox states for each sample.
+    """
+    n_samples = c.shape[0]
+    states = []
+    
+    try:
+        # Get indices if available
+        idx_no3 = ion_names.index("NO3-") if "NO3-" in ion_names else None
+        idx_fe = ion_names.index("Fe") if "Fe" in ion_names else (ion_names.index("Fe2+") if "Fe2+" in ion_names else None)
+        
+        # Thresholds (in meq/L approx)
+        # NO3 > 1 mg/L => > 0.016 meq/L
+        # Fe > 0.1 mg/L => > 0.0036 meq/L (assuming Fe2+)
+        
+        no3_thresh = 0.016
+        fe_thresh = 0.004
+        
+        for i in range(n_samples):
+            no3_val = c[i, idx_no3] if idx_no3 is not None else 0.0
+            fe_val = c[i, idx_fe] if idx_fe is not None else 0.0
+            
+            if no3_val > no3_thresh:
+                states.append("Oxic")
+            elif fe_val > fe_thresh:
+                states.append("Anoxic")
+            else:
+                states.append("Suboxic/Mixed")
+                
+    except Exception:
+        states = ["Unknown"] * n_samples
+        
+    return states
+
+
+def calculate_pollution_indices(
+    c: NDArray[np.floating],
+    ion_names: list[str]
+) -> dict[str, NDArray[np.floating]]:
+    """
+    Calculate Pollution Fingerprinting Ratios.
+    
+    1. NO3/Cl Ratio: 
+       - High (> 1.0) + High NO3: Chemical N-Fertilizer.
+       - Moderate (0.05 - 1.0) + High Cl: Sewage/Manure.
+    2. K/Na Ratio: High (> 0.2) indicates Potash fertilizer.
+    
+    Parameters
+    ----------
+    c : ndarray
+        Concentrations in meq/L.
+    ion_names : list[str]
+        List of ion names.
+        
+    Returns
+    -------
+    indices : dict
+        Dictionary containing 'no3_cl_ratio', 'k_na_ratio', 'no3_meq', 'cl_meq'.
+    """
+    n_samples = c.shape[0]
+    
+    try:
+        idx_cl = ion_names.index("Cl-")
+        idx_na = ion_names.index("Na+")
+        idx_k = ion_names.index("K+")
+        idx_no3 = ion_names.index("NO3-") if "NO3-" in ion_names else None
+        
+        cl = c[:, idx_cl]
+        na = c[:, idx_na]
+        k = c[:, idx_k]
+        no3 = c[:, idx_no3] if idx_no3 is not None else np.zeros(n_samples)
+        
+        # Avoid divide by zero
+        cl_safe = cl.copy()
+        cl_safe[cl_safe == 0] = 1e-9
+        
+        na_safe = na.copy()
+        na_safe[na_safe == 0] = 1e-9
+        
+        no3_cl = no3 / cl_safe
+        k_na = k / na_safe
+        
+        return {
+            "no3_cl_ratio": no3_cl,
+            "k_na_ratio": k_na,
+            "no3_meq": no3,
+            "cl_meq": cl
+        }
+        
+    except ValueError:
+        return {
+            "no3_cl_ratio": np.zeros(n_samples),
+            "k_na_ratio": np.zeros(n_samples),
+            "no3_meq": np.zeros(n_samples),
+            "cl_meq": np.zeros(n_samples)
+        }
+
+
+def calculate_salinity_indices(
+    c: NDArray[np.floating],
+    ion_names: list[str]
+) -> dict[str, NDArray[np.floating]]:
+    """
+    Calculate Salinity Origin Indices.
+    
+    1. Revelle Index (RI) = Cl / (CO3 + HCO3)
+       - RI > 1: Saline influence.
+    2. Na/Cl Ratio
+       - ~0.86 (molar) or ~1 (meq): Halite dissolution.
+       - < 0.86: Seawater intrusion (Na exchange for Ca).
+       - > 1: Silicate weathering.
+       
+    Parameters
+    ----------
+    c : ndarray
+        Concentrations in meq/L.
+    ion_names : list[str]
+        List of ion names.
+        
+    Returns
+    -------
+    indices : dict
+        Dictionary containing 'revelle_index' and 'na_cl_ratio'.
+    """
+    n_samples = c.shape[0]
+    
+    try:
+        idx_cl = ion_names.index("Cl-")
+        idx_na = ion_names.index("Na+")
+        idx_hco3 = ion_names.index("HCO3-")
+        idx_co3 = ion_names.index("CO32-") if "CO32-" in ion_names else None
+        
+        cl = c[:, idx_cl]
+        na = c[:, idx_na]
+        hco3 = c[:, idx_hco3]
+        co3 = c[:, idx_co3] if idx_co3 is not None else np.zeros(n_samples)
+        
+        # Revelle Index: Cl / (CO3 + HCO3)
+        alkalinity = hco3 + co3
+        alkalinity[alkalinity == 0] = 1e-9
+        ri = cl / alkalinity
+        
+        # Na/Cl Ratio
+        cl_safe = cl.copy()
+        cl_safe[cl_safe == 0] = 1e-9
+        na_cl = na / cl_safe
+        
+        return {
+            "revelle_index": ri,
+            "na_cl_ratio": na_cl
+        }
+        
+    except ValueError:
+        return {
+            "revelle_index": np.zeros(n_samples),
+            "na_cl_ratio": np.zeros(n_samples)
+        }
 
 
 def calculate_gibbs_ratios(
@@ -260,6 +448,71 @@ def calculate_bex(
     cl = c[:, idx_cl]
 
     return na + k + mg - (1.0716 * cl)
+
+
+def classify_water_types(
+    c: NDArray[np.floating],
+    ion_names: list[str],
+    threshold_dominant: float = 0.5,
+    threshold_significant: float = 0.25
+) -> List[str]:
+    """
+    Classify water types based on ion dominance.
+    
+    Parameters
+    ----------
+    c : ndarray (n_samples, n_ions)
+        Concentrations in meq/L.
+    ion_names : list[str]
+    threshold_dominant : float
+    threshold_significant : float
+    
+    Returns
+    -------
+    water_types : list[str]
+    """
+    try:
+        idx_ca = ion_names.index("Ca2+")
+        idx_mg = ion_names.index("Mg2+")
+        idx_na = ion_names.index("Na+")
+        idx_k = ion_names.index("K+")
+        idx_hco3 = ion_names.index("HCO3-")
+        idx_cl = ion_names.index("Cl-")
+        idx_so4 = ion_names.index("SO42-")
+    except ValueError:
+        return ["Unknown"] * c.shape[0]
+
+    n = c.shape[0]
+    water_types = []
+    
+    for i in range(n):
+        sum_cat = c[i, idx_ca] + c[i, idx_mg] + c[i, idx_na] + c[i, idx_k]
+        sum_an = c[i, idx_hco3] + c[i, idx_cl] + c[i, idx_so4]
+        
+        if sum_cat == 0 or sum_an == 0:
+            water_types.append("Mixed")
+            continue
+            
+        # Cations
+        cat_labels = []
+        if c[i, idx_ca]/sum_cat > threshold_dominant or c[i, idx_ca]/sum_cat > threshold_significant: cat_labels.append("Ca")
+        if c[i, idx_mg]/sum_cat > threshold_dominant or c[i, idx_mg]/sum_cat > threshold_significant: cat_labels.append("Mg")
+        if c[i, idx_na]/sum_cat > threshold_dominant or c[i, idx_na]/sum_cat > threshold_significant: cat_labels.append("Na")
+        if c[i, idx_k]/sum_cat > threshold_dominant or c[i, idx_k]/sum_cat > threshold_significant: cat_labels.append("K")
+        
+        # Anions
+        an_labels = []
+        if c[i, idx_hco3]/sum_an > threshold_dominant or c[i, idx_hco3]/sum_an > threshold_significant: an_labels.append("HCO3")
+        if c[i, idx_cl]/sum_an > threshold_dominant or c[i, idx_cl]/sum_an > threshold_significant: an_labels.append("Cl")
+        if c[i, idx_so4]/sum_an > threshold_dominant or c[i, idx_so4]/sum_an > threshold_significant: an_labels.append("SO4")
+        
+        if cat_labels and an_labels:
+            label = "-".join(cat_labels) + "-" + "-".join(an_labels)
+        else:
+            label = "Mixed"
+        water_types.append(label)
+        
+    return water_types
 
 
 def validate_chloride_origin(
@@ -647,10 +900,15 @@ def build_stoichiometric_matrix(
     ion_names : list of str
         Names of ions (row order).
     """
-    mineral_names = list(minerals.keys())
+    # Only include minerals where ALL ions in their stoichiometry are present in measured data
+    # This prevents impossible minerals (e.g., Borax without B, Malachite without Cu)
+    mineral_names = [
+        name for name, data in minerals.items() 
+        if all(ion in ion_order for ion in data["stoichiometry"].keys())
+    ]
+    
     m = len(ion_order)
     K = len(mineral_names)
-
     A = np.zeros((m, K))
 
     for k, mineral_name in enumerate(mineral_names):
@@ -823,6 +1081,15 @@ class MineralInverter:
                 D = np.ones(m)
                 logger.warning(f"pi_G size ({len(pi_G)}) does not match ion count ({m}). Using uniform weights.")
 
+        # FIX: Enforce strict constraints for missing ions (all zeros)
+        # If an ion is missing (0 concentration), its pi_G might be 0, leading to D~0.
+        # This would allow the solver to ignore the constraint and hallucinate minerals.
+        # We force D=1.0 for these ions to enforce 0 = A*s.
+        zero_ions_mask = np.all(np.abs(c) < 1e-9, axis=0)
+        if np.any(zero_ions_mask):
+            target_weight = max(1.0, np.max(D))
+            D[zero_ions_mask] = target_weight
+
         # Calculate CAI constraints if requested
         cai_mask_release_na = np.ones(n, dtype=bool) # Allowed by default
         cai_mask_release_ca = np.ones(n, dtype=bool) # Allowed by default
@@ -990,6 +1257,11 @@ class MineralInverter:
         sr, fr = calculate_simpson_ratio(c, self.ion_names)
         bex = calculate_bex(c, self.ion_names)
         
+        # New Universal Indices
+        redox_states = calculate_redox_state(c, self.ion_names)
+        pollution_indices = calculate_pollution_indices(c, self.ion_names)
+        salinity_indices = calculate_salinity_indices(c, self.ion_names)
+        
         # Add Simpson Class
         simpson_class = []
         for val in sr:
@@ -1017,6 +1289,9 @@ class MineralInverter:
             # Update overall plausibility: must meet stoichiometric AND thermodynamic criteria
             plausible = plausible & thermo_plausible
 
+        # 9. Water Type Classification
+        water_types = classify_water_types(c, self.ion_names)
+
         return MineralInversionResult(
             s=s,
             residuals=residuals,
@@ -1035,7 +1310,11 @@ class MineralInverter:
             },
             saturation_indices=si_dict,
             thermo_plausible=thermo_plausible,
-            mineral_names=self.mineral_names
+            mineral_names=self.mineral_names,
+            water_types=water_types,
+            pollution_indices=pollution_indices,
+            redox_state=redox_states,
+            salinity_indices=salinity_indices
         )
 
     def get_stoichiometry_dataframe(self):
@@ -1083,7 +1362,14 @@ class MineralInverter:
 
         data = {"sample_id": sample_ids, "residual_norm": result.residual_norms}
 
-        for k, mineral in enumerate(self.mineral_names):
+        # Use mineral names from result if available, otherwise use inverter's names
+        mineral_names = result.mineral_names if result.mineral_names is not None else self.mineral_names
+
+        if len(mineral_names) != result.s.shape[1]:
+             # Fallback if dimensions mismatch
+             mineral_names = [f"Mineral_{i}" for i in range(result.s.shape[1])]
+
+        for k, mineral in enumerate(mineral_names):
             data[f"{mineral}_s"] = result.s[:, k]
             data[f"{mineral}_frac"] = result.mineral_fractions[:, k]
             data[f"{mineral}_plausible"] = result.plausible[:, k]
@@ -1092,6 +1378,22 @@ class MineralInverter:
         if result.indices:
             for idx_name, idx_vals in result.indices.items():
                 data[idx_name] = idx_vals
+                
+        # Add Universal Indices
+        if result.redox_state:
+            data["Redox_State"] = result.redox_state
+            
+        if result.pollution_indices:
+            for k, v in result.pollution_indices.items():
+                data[f"Pollution_{k}"] = v
+                
+        if result.salinity_indices:
+            for k, v in result.salinity_indices.items():
+                data[f"Salinity_{k}"] = v
+                
+        # Add Water Type if available
+        if result.water_types:
+            data["Water_Type"] = result.water_types
 
         return pd.DataFrame(data)
 

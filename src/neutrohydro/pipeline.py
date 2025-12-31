@@ -9,7 +9,7 @@ Provides a unified workflow from raw data to:
 - Optional mineral inference
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Optional, Any
 from pathlib import Path
 
@@ -40,8 +40,8 @@ class PipelineConfig:
     delta_s: float = 1e-10
 
     # NDG Encoder
-    baseline_type: str = "median"
-    baseline_rank: Optional[int] = None
+    baseline_type: str = "robust_pca"
+    baseline_rank: Optional[int] = 2
     falsity_map: str = "exponential"
     falsity_params: Optional[dict] = None
 
@@ -84,9 +84,8 @@ class PipelineResults:
     # Predictions
     y_pred: NDArray[np.floating]
     y_pred_original: NDArray[np.floating]
-
-    # Metrics
     r2_train: float
+    y_train: Optional[NDArray[np.floating]] = None # Original target values
 
     # Optional mineral results
     mineral_result: Optional[MineralInversionResult] = None
@@ -199,11 +198,11 @@ class NeutroHydroPipeline:
         )
         model.fit(triplets, y_std)
 
-        # 4. NVIP
-        nvip = compute_nvip(model)
+        # 2. NVIP computation
+        nvip_result = compute_nvip(model, feature_names=feature_names)
 
         # 5. NSR / pi_G
-        nsr = compute_nsr(nvip, self.config.epsilon, self.config.gamma)
+        nsr = compute_nsr(nvip_result, self.config.epsilon, self.config.gamma)
 
         # 6. Sample-level G_i
         sample_attribution = compute_sample_baseline_fraction(model, triplets, nsr)
@@ -222,11 +221,12 @@ class NeutroHydroPipeline:
                 c_meq = X  # Assume X is already in meq/L
 
             inverter = MineralInverter(
+                ion_order=feature_names,
                 eta=self.config.mineral_eta,
                 tau_s=self.config.mineral_tau_s,
                 tau_r=self.config.mineral_tau_r,
             )
-            # Match ion dimensions
+            # Use all samples if dimensions match
             if c_meq.shape[1] == len(inverter.ion_names):
                 mineral_result = inverter.invert(
                     c_meq, 
@@ -243,11 +243,12 @@ class NeutroHydroPipeline:
             encoder=encoder,
             model=model,
             triplets=triplets,
-            nvip=nvip,
+            nvip=nvip_result,
             nsr=nsr,
             sample_attribution=sample_attribution,
             y_pred=y_pred_std,
             y_pred_original=y_pred_original,
+            y_train=y, # Save original target
             r2_train=r2_train,
             mineral_result=mineral_result,
             feature_names=feature_names,
@@ -315,6 +316,7 @@ class NeutroHydroPipeline:
         )
 
         return {
+            "config": asdict(self.results_.config) if self.results_.config else {},
             "model": {
                 "n_components": self.results_.model.components_.n_components,
                 "r2_train": self.results_.r2_train,
@@ -354,6 +356,20 @@ class NeutroHydroPipeline:
             'nsr': nsr_to_dataframe(self.results_.nsr, self.results_.feature_names),
             'samples': sample_attribution_to_dataframe(self.results_.sample_attribution),
         }
+        
+        # Predictions
+        if self.results_.y_train is not None:
+            dataframes['predictions'] = pd.DataFrame({
+                'Actual': self.results_.y_train,
+                'Predicted': self.results_.y_pred_original,
+                'Residual': self.results_.y_train - self.results_.y_pred_original
+            })
+
+        # Include mineral results if available
+        if self.results_.mineral_result:
+            # We use a default inverter to call the helper method
+            inv = MineralInverter() 
+            dataframes['minerals'] = inv.results_to_dataframe(self.results_.mineral_result)
 
         return dataframes
 

@@ -4,17 +4,29 @@
 
 ## Overview
 
-The Quality Assessment module provides an automated system for evaluating groundwater samples against **WHO (World Health Organization)** drinking water guidelines. Beyond simple compliance checking, it implements an **intelligent source inference** engine that interprets combinations of exceedances to suggest potential pollution origins.
+The Quality Assessment module provides two levels of validation:
+1. **Data Sanity Checks**: Strict validation of chemical plausibility (Charge Balance, Completeness).
+2. **Water Quality Assessment**: Evaluation against WHO guidelines and source inference.
 
-## Features
+## 1. Data Sanity Checks (Critical Validity)
 
-1. **WHO Compliance Check**: Automatically flags parameters exceeding standard limits.
-2. **Source Inference**: Uses hydrogeochemical logic to infer the likely cause of contamination (e.g., Saline Intrusion vs. Anthropogenic Pollution).
-3. **Integration**: Can be used as a standalone tool or to provide **context-aware constraints** for the Mineral Inversion model.
+Before any analysis, NeutroHydro enforces strict geological validity to prevent "garbage-in, garbage-out".
 
-## Mathematical Logic
+### 1.1 Charge Balance Error (CBE)
+Ensures electroneutrality. Samples with **CBE > 15%** are flagged as unreliable.
+$$ CBE (\%) = \frac{\sum z \cdot m_{cations} - \sum z \cdot m_{anions}}{\sum z \cdot m_{cations} + \sum z \cdot m_{anions}} \times 100 $$
 
-### 1. Thresholds
+### 1.2 Completeness Check
+Verifies that all major ions (Ca, Mg, Na, K, HCO3, Cl, SO4) are present. Missing major ions make geochemical modeling impossible.
+
+### 1.3 Extreme Value Detection
+Flags physically impossible or extreme values (e.g., Cl > 10,000 mg/L without corresponding Na) that suggest measurement error or extreme brine conditions requiring specialized handling.
+
+## 2. Water Quality Assessment (WHO)
+
+Evaluates samples against **WHO (World Health Organization)** drinking water guidelines.
+
+### 2.1 Thresholds
 
 The module uses standard WHO guideline values (mg/L):
 

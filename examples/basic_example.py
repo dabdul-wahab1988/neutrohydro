@@ -65,7 +65,7 @@ def main():
     """Run the complete NeutroHydro workflow."""
 
     print("=" * 70)
-    print("NEUTROHYDRO: Neutrosophic Chemometrics for Groundwater Analysis")
+    print("NEUTROHYDRO: Neutralization-Displacement Geosystem (NDG) Framework")
     print("=" * 70)
 
     # Generate synthetic data

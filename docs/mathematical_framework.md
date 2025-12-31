@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-NeutroHydro implements a **neutrosophic chemometric framework** for groundwater analysis that operates in **absolute concentration space**. This document provides a high-level overview of the mathematical theory underpinning the package.
+NeutroHydro implements the **Neutralization-Displacement Geosystem (NDG) theory with Stoichiometric Inversion**, a neutrosophic chemometric framework for groundwater analysis that operates in **absolute concentration space**. This document provides a high-level overview of the mathematical theory underpinning the package.
 
 ## 2. Problem Statement
 

@@ -1,8 +1,8 @@
 # NeutroHydro
 
-## Neutrosophic Chemometrics for Groundwater Analysis
+## Neutralization-Displacement Geosystem (NDG) Framework
 
-NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in absolute concentration space:
+NeutroHydro implements the **Neutralization-Displacement Geosystem (NDG) theory with Stoichiometric Inversion**, a mathematically well-posed workflow for groundwater chemometrics in absolute concentration space:
 
 **NDG encoder → PNPLS regression → NVIP decomposition → $NSR/π_G$ attribution → mineral plausibility via stoichiometric inversion**
 
@@ -29,6 +29,7 @@ NeutroHydro implements a mathematically well-posed workflow for groundwater chem
 - **Mineral Inference**: Stoichiometric inversion via weighted NNLS
   - Standard mineral library included
   - Custom mineral definitions supported
+  - **Universal Framework**: Includes Redox, Pollution, and Salinity modules
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # NeutroHydro Documentation
 
-## Neutrosophic Chemometrics for Groundwater Analysis
+## Neutralization-Displacement Geosystem (NDG) Framework
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@
 - [Attribution: NSR and Baseline Fractions](attribution.md)
 - [Mineral Stoichiometric Inversion](minerals.md)
 - [Water Quality Assessment](quality_check.md)
+- [Publication-Quality Visualization](visualization.md)
 - [Model Limitations & Validity](limitations.md)
 - [Hydrogeochemical Processes](hydrogeochemical_processes.md): Mixing, Exchange, Redox
 - [Mathematical Critique](mathematical_critique.md): Rigorous review of potential issues
@@ -37,7 +38,7 @@
 
 ## Overview
 
-NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in **absolute concentration space** (non-compositional):
+NeutroHydro implements the **Neutralization-Displacement Geosystem (NDG) theory with Stoichiometric Inversion**, a mathematically well-posed workflow for groundwater chemometrics in **absolute concentration space** (non-compositional):
 
 ```text
 Raw Ion Data
@@ -89,6 +90,7 @@ Combines rigorous mathematical optimization with expert hydrogeochemical heurist
 - **Thermodynamic Validation**: Integrated **PHREEQC** engine for Saturation Index (SI) calculation and redox-aware speciation (Eh) to ensure identified mineral assemblages are physically realistic.
 - **Redox Detection**: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry.
 - **Advanced Indices**: Integrated **Simpson's Ratio** (Revelle Coefficient) and **Base Exchange Index (BEX)** for precise salinity and freshening diagnosis.
+- **Publication-Ready Visualization**: Modular plotting system with **Gibbs Diagrams**, **ILR Water Classification**, **Correlation Matrices**, and **Mineral SI Analysis**.
 
 ## Quick Navigation
 

@@ -2,7 +2,24 @@
 
 This guide will help you run your first analysis using NeutroHydro.
 
-## 1. Basic Workflow
+## 1. Command Line Interface (Recommended)
+
+The easiest way to use NeutroHydro is via the interactive CLI wizard.
+
+### Wizard Mode
+Simply run:
+```bash
+neutrohydro
+```
+Select **"1. Wizard Mode"** to be guided through data loading, column mapping, and analysis configuration.
+
+### Automated Run
+For reproducible workflows:
+```bash
+neutrohydro run data.csv --target TDS --groups Zone --minerals --validate-thermo
+```
+
+## 2. Python API Workflow
 
 The core of NeutroHydro is the `NeutroHydroPipeline`. It handles preprocessing, encoding, model training, and mineral inversion in a single step.
 

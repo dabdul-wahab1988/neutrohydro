@@ -8,7 +8,7 @@ Implements Section 5 of the specification:
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -30,11 +30,14 @@ class NVIPResult:
     SSY: NDArray[np.floating]      # Response energy per component
     n_features: int                # Number of original features (p)
     n_components: int              # Number of PLS components (k)
+    model: Optional[Any] = None    # Reference to fitted model
+    feature_names: Optional[list[str]] = None # Feature names
 
 
 def compute_nvip(
     model: PNPLS,
     components: Optional[PLSComponents] = None,
+    feature_names: Optional[list[str]] = None,
 ) -> NVIPResult:
     """
     Compute Neutrosophic Variable Importance in Projection.
@@ -146,6 +149,8 @@ def compute_nvip(
         SSY=SSY,
         n_features=p,
         n_components=k,
+        model=model,
+        feature_names=feature_names
     )
 
 

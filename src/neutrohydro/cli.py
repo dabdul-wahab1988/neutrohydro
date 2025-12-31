@@ -14,13 +14,14 @@ import numpy as np
 import pandas as pd
 
 from neutrohydro.pipeline import NeutroHydroPipeline, PipelineConfig
+from neutrohydro.quality_check import check_sanity
 
 
 def create_parser() -> argparse.ArgumentParser:
     """Create argument parser for CLI."""
     parser = argparse.ArgumentParser(
         prog="neutrohydro",
-        description="Neutrosophic chemometrics for groundwater analysis",
+        description="Neutralization-Displacement Geosystem (NDG) Framework",
     )
     parser.add_argument(
         "--version",
@@ -75,15 +76,15 @@ def create_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--baseline",
         type=str,
-        choices=["median", "hydrofacies", "low_rank", "robust_pca"],
-        default="median",
-        help="Baseline type for NDG encoder (default: median)",
+        choices=["robust_pca", "low_rank", "hydrofacies"],
+        default="robust_pca",
+        help="Baseline type for NDG encoder (default: robust_pca)",
     )
     run_parser.add_argument(
         "--baseline-rank",
         type=int,
-        default=None,
-        help="Rank for low-rank baseline methods",
+        default=2,
+        help="Rank for low-rank baseline methods (default: 2)",
     )
     run_parser.add_argument(
         "--rho-i",
@@ -115,6 +116,16 @@ def create_parser() -> argparse.ArgumentParser:
         help="Run mineral stoichiometric inference",
     )
     run_parser.add_argument(
+        "--groups",
+        type=str,
+        help="Column name for grouping samples (handles heterogeneity)",
+    )
+    run_parser.add_argument(
+        "--validate-thermo",
+        action="store_true",
+        help="Enable thermodynamic validation (requires pH/Eh)",
+    )
+    run_parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -143,6 +154,24 @@ def run_command(args) -> int:
 
     df = pd.read_csv(data_path)
 
+    # Sanity Check
+    if args.verbose:
+        print("Running sanity checks...")
+    sanity_report = check_sanity(df)
+    
+    if not sanity_report["valid"]:
+        print("CRITICAL ERROR: Data failed sanity checks!", file=sys.stderr)
+        for warning in sanity_report["warnings"]:
+            print(f"  - {warning}", file=sys.stderr)
+        print("Aborting to prevent meaningless results.", file=sys.stderr)
+        return 1
+        
+    if sanity_report["warnings"]:
+        print("WARNING: Potential data quality issues detected:", file=sys.stderr)
+        for warning in sanity_report["warnings"]:
+            print(f"  - {warning}", file=sys.stderr)
+        print("Proceeding with caution...", file=sys.stderr)
+
     # Validate target column
     if args.target not in df.columns:
         print(f"Error: Target column '{args.target}' not found in data", file=sys.stderr)
@@ -157,7 +186,17 @@ def run_command(args) -> int:
             print(f"Error: Feature columns not found: {missing}", file=sys.stderr)
             return 1
     else:
-        feature_names = [c for c in df.columns if c != args.target]
+        # Use all numeric columns except target and special ones
+        exclude = [args.target]
+        if args.groups: exclude.append(args.groups)
+        
+        # Also exclude common ID columns
+        id_cols = ["SampleID", "Code", "ID", "Name", "Date", "Time"]
+        exclude.extend([c for c in df.columns if c in id_cols])
+        
+        # Select only numeric columns
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        feature_names = [c for c in numeric_cols if c not in exclude]
 
     if args.verbose:
         print(f"Target: {args.target}")
@@ -190,6 +229,7 @@ def run_command(args) -> int:
         lambda_F=args.lambda_f,
         gamma=args.gamma,
         run_mineral_inference=args.minerals,
+        run_thermodynamic_validation=args.validate_thermo,
     )
 
     if args.verbose:
@@ -201,12 +241,33 @@ def run_command(args) -> int:
         print(f"  lambda_F: {config.lambda_F}")
         print(f"  gamma: {config.gamma}")
 
+    # Extract groups if provided
+    groups = None
+    if args.groups:
+        if args.groups not in df.columns:
+            print(f"Error: Group column '{args.groups}' not found", file=sys.stderr)
+            return 1
+        # Convert to integer codes if string
+        if df[args.groups].dtype == object:
+            groups = pd.Categorical(df[args.groups]).codes
+        else:
+            groups = df[args.groups].values
+
+    # Extract pH and Eh if available (for thermodynamic validation)
+    pH = None
+    Eh = None
+    for col in df.columns:
+        if col.lower() == "ph":
+            pH = df[col].values
+        elif col.lower() == "eh":
+            Eh = df[col].values
+
     # Run pipeline
     if args.verbose:
         print("\nFitting pipeline...")
 
     pipeline = NeutroHydroPipeline(config)
-    results = pipeline.fit(X, y, feature_names)
+    results = pipeline.fit(X, y, feature_names, groups=groups, pH=pH, Eh=Eh)
 
     if args.verbose:
         print(f"\nModel R2: {results.r2_train:.4f}")
@@ -256,7 +317,7 @@ def info_command(args) -> int:
     """Execute the info command."""
     from neutrohydro import __version__
 
-    print("NeutroHydro - Neutrosophic Chemometrics for Groundwater Analysis")
+    print("NeutroHydro - Neutralization-Displacement Geosystem (NDG) Framework")
     print(f"Version: {__version__}")
     print()
     print("Components:")
