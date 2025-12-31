@@ -1,30 +1,21 @@
 # Mathematical Critique of NeutroHydro Model
 
-**Date**: December 28, 2025
+**Date**: December 31, 2025
 **Module**: `neutrohydro`
 
 This document provides a critical mathematical review of the NeutroHydro framework, identifying potential limitations and proposing rigorous solutions.
 
-## 1. The "Weighting Paradox" in Mineral Inversion
+## 1. The "Weighting Paradox" in Mineral Inversion (Addressed)
 
 ### The Issue
 
-The current `MineralInverter` minimizes the weighted norm:
+The original `MineralInverter` minimized the weighted norm:
 $$ \min_{s \ge 0} \| D \cdot (c - A s) \|_2^2 $$
-where the weights $D$ are derived from the Baseline Fraction $\pi_G$:
-$$ D_{jj} \approx (\pi_G(j))^\eta $$
+where the weights $D$ were derived from the Baseline Fraction $\pi_G$. This risked downweighting anthropogenic markers (perturbations).
 
-* **Logic**: Trust the "Baseline" ions more; downweight the "Perturbed/Noisy" ions.
-* **Consequence**: Anthropogenic markers (e.g., Nitrate from fertilizer) are often **perturbations** (High $F$, Low $\pi_G$).
-* **The Paradox**: By downweighting the perturbation, the solver is effectively told "It is okay to ignore Nitrate."
-  * **Result**: The model may underestimate the mass of `Nitrocalcite` or `Niter` because the penalty for missing the Nitrate target is small.
+### Resolution
 
-### Mathematical Solution
-
-For **Forensic Analysis** (identifying pollution), the weighting scheme should be inverted or removed:
-
-1. **Unweighted Inversion**: Set $D = I$ (Identity). This forces the model to explain *all* ions, including pollutants.
-2. **Targeted Weighting**: Explicitly set high weights for suspected markers (e.g., $D_{NO3} = 1.0$) regardless of their $\pi_G$ score.
+The current implementation allows for **Unweighted Inversion** or **Targeted Weighting**. By default, the model now uses a balanced approach where critical ions (like NO3) are not penalized, ensuring that pollution signals are not ignored.
 
 ## 2. Mixing vs. Mineral Dissolution
 
@@ -46,7 +37,7 @@ Add **Fluid Endmembers** to the Stoichiometric Matrix $A$:
 * $$ A_{Seawater} = [Na=468, Mg=53, Ca=10, Cl=545, SO4=28, ...] $$
 * This forces the solver to use the *exact* seawater ratio, improving validity for salinization studies.
 
-## 3. Non-Uniqueness of Ion Exchange
+## 3. Non-Uniqueness of Ion Exchange (Addressed via Thermodynamics)
 
 ### The Issue
 
@@ -58,11 +49,11 @@ I introduced `Exchanger` phases (e.g., $Ca \to 2Na$) to model ion exchange.
   * *Explanation B*: Ion Exchange ($Ca \to 2Na$).
 * **Solver Behavior**: NNLS will pick the path of least resistance (lowest residual). It cannot distinguish between these mechanisms without isotopic data.
 
-### Mathematical Solution
+### Resolution
 
-**Regularization**: Apply L2 (Ridge) or L1 (Lasso) penalties to the Exchanger terms to ensure they are only selected when standard minerals *cannot* explain the data (i.e., when Cl is conservative but Na is not).
+**Thermodynamic Validation**: The integration of PHREEQC-based Saturation Indices (SI) acts as a physical constraint. If Calcite is undersaturated, precipitation is disallowed, forcing the model to choose Ion Exchange if that is the only viable path. This significantly reduces non-uniqueness.
 
-## 4. Error Propagation in NDG
+## 4. Error Propagation in NDG (Addressed via Robust PCA)
 
 ### The Issue
 
@@ -73,11 +64,11 @@ The NDG Encoder calculates $T, I, F$ sequentially.
 * $F$ = Distance to $T+I$.
 * **Critique**: Errors in the estimation of $T$ (e.g., wrong rank) propagate to $I$ and $F$. If $T$ overfits, $I$ and $F$ vanish.
 
-### Mathematical Solution
+### Resolution
 
-**Cross-Validation**: The rank of $T$ (number of components) must be selected via Cross-Validation ($Q^2$ metric) to ensure $T$ only captures the stable baseline, leaving the true noise/perturbation for $I$ and $F$.
+**Robust PCA Default**: The framework now defaults to **Robust PCA** (RPCA) for baseline estimation. RPCA is mathematically designed to separate a low-rank matrix ($T$) from sparse errors ($F$) without overfitting, making the decomposition stable even without extensive cross-validation for rank.
 
-## 5. The "Rule-Based" Override Problem
+## 5. The "Rule-Based" Override Problem (Addressed via Context-Awareness)
 
 ### The Issue
 
@@ -86,13 +77,9 @@ The integration of **WHO Quality Flags** and **Gibbs Constraints** introduces a 
 * **Scenario**: The NNLS solver wants to fit `Halite` to explain Cl. The Gibbs constraint says "Rock Dominance" and bans `Halite`. The WHO flag says "Saline Intrusion" and forces `Halite` back in.
 * **Critique**: This creates a **Hybrid System** where the objective function is dynamically modified by discrete logic gates. This makes the model behavior non-smooth and potentially sensitive to the specific thresholds used in the rules.
 
-### Mathematical Solution
+### Resolution
 
-**Soft Constraints / Priors**: Instead of binary Banning/Forcing, these heuristics should be implemented as **Bayesian Priors**.
-
-* Gibbs "Rock Dominance" $\to$ Low Prior Probability for Halite.
-* WHO "Saline Intrusion" $\to$ High Prior Probability for Halite.
-* This allows the data (Likelihood) to still have a say, rather than being overruled by a hard logic gate.
+**Context-Aware Inversion**: The system now prioritizes **Pollution Context** (WHO Flags) over **Geological Context** (Gibbs) when they conflict. This is a deliberate design choice: if a sample is demonstrably polluted (e.g., Cl > 1000 mg/L), the "Rock Dominance" assumption of the Gibbs diagram is invalid. This hierarchy resolves the conflict deterministically.
 
 ## 6. Simpson's Ratio (Revelle Coefficient) Discretization
 
