@@ -288,17 +288,7 @@ Combines rigorous mathematical optimization with expert hydrogeochemical heurist
 - Contributing? → See `CONTRIBUTING.md` in repo root
 - Testing? → See `tests/` directory
 
-## Citation
 
-If you use NeutroHydro in your research, please cite:
-
-```bibtex
-@software{neutrohydro,
-  title = {NeutroHydro: Neutrosophic Chemometrics for Groundwater Analysis},
-  year = {2024},
-     url = {https://github.com/dabdul-wahab1988/neutrohydro}
-}
-```
 
 ## License
 
