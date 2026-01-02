@@ -4,6 +4,11 @@ Example: Generate hydrogeochemical visualization report.
 This script demonstrates how to use NeutroHydro's visualization module
 to create publication-quality plots from groundwater chemistry data.
 
+Shows three approaches:
+1. generate_report() - Complete automated report
+2. Individual plotting functions - Fine-grained control
+3. Registry-based composition - Modular plot assembly
+
 Usage:
     python examples/run_visualization.py
 """
@@ -21,6 +26,7 @@ from neutrohydro.visualization import (
     plot_gibbs,
     plot_ilr_classification,
     plot_correlation_matrix,
+    create_figure,
     mg_to_meq,
 )
 
@@ -66,8 +72,38 @@ def main():
                                    output_path=os.path.join(output_dir, 'correlation_ions.png'))
     print("  [OK] correlation_ions.png")
     
+    # 5. Option C: Registry-based composition (advanced)
+    print("\n" + "="*60)
+    print("Registry-Based Plot Composition")
+    print("="*60)
+    
+    # Prepare data dictionary for registry
+    registry_data = {'df': df, 'df_meq': df_meq}
+    
+    # Dual Gibbs plot using registry
+    fig = create_figure('[g1|g2]', registry_data, 
+                       output_path=os.path.join(output_dir, 'registry_gibbs_dual.png'))
+    print("  [OK] registry_gibbs_dual.png")
+    
+    # Correlation matrix using registry
+    fig = create_figure('[h1]', registry_data,
+                       output_path=os.path.join(output_dir, 'registry_correlation.png'))
+    print("  [OK] registry_correlation.png")
+    
+    # Use preset configurations
+    fig = create_figure('fig1_classification', registry_data,
+                       output_path=os.path.join(output_dir, 'preset_classification.png'))
+    print("  [OK] preset_classification.png")
+    
+    fig = create_figure('fig2_correlation', registry_data,
+                       output_path=os.path.join(output_dir, 'preset_correlation.png'))
+    print("  [OK] preset_correlation.png")
+    
     print("\n" + "="*60)
     print(f"\n[OK] All plots saved to: {os.path.abspath(output_dir)}")
+    print("Individual functions: gibbs_custom.png, ilr_custom.png, correlation_ions.png")
+    print("Registry composition: registry_gibbs_dual.png, registry_correlation.png")
+    print("Preset layouts: preset_classification.png, preset_correlation.png")
     print("="*60)
 
 

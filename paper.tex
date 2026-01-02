@@ -1,0 +1,250 @@
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{authblk}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue,
+}
+
+% Code listing setup
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b
+}
+
+% Title and authors
+\title{\textbf{NeutroHydro: A Python Package for Neutrosophic Chemometrics in Groundwater Analysis}}
+
+\author[1]{Dickson Abdul-Wahab\thanks{Corresponding author: dabdul-wahab@live.com; ORCID: 0000-0001-7446-5909}}
+\author[2]{Ebenezer Aquisman Asare\thanks{ORCID: 0000-0003-1185-1479}}
+
+\affil[1]{University of Ghana, Ghana}
+\affil[2]{Nuclear Chemistry and Environmental Research Centre, National Nuclear Research Institute (NNRI), Ghana Atomic Energy Commission, Ghana}
+
+\date{January 2, 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Groundwater quality assessment relies on understanding the complex interactions between natural geogenic processes and anthropogenic perturbations. Traditional chemometric approaches often struggle to disentangle these sources due to the inherent uncertainty, ambiguity, and incomplete information in hydrogeochemical datasets. \texttt{NeutroHydro} introduces the Neutralization-Displacement Geosystem (NDG) framework with Stoichiometric Inversion, a novel neutrosophic chemometric approach that addresses these challenges by operating in absolute concentration space rather than compositional space. The package provides a mathematically rigorous workflow for decomposing groundwater chemistry into baseline (geogenic) and perturbation (anthropogenic) components, enabling quantitative source attribution and mineral inference.
+\end{abstract}
+
+\noindent\textbf{Keywords:} Python, groundwater, chemometrics, neutrosophic logic, hydrogeochemistry, partial least squares, water quality
+
+\section{Introduction}
+
+Groundwater chemometrics faces several persistent challenges: (1) distinguishing natural baseline chemistry from anthropogenic contamination, (2) handling uncertainty and ambiguity in concentration measurements, (3) performing statistically valid operations in non-compositional space, and (4) linking statistical patterns to physical hydrogeochemical processes through mineral stoichiometry. Existing approaches either use compositional data analysis (CoDa) which operates in log-ratio space and loses direct physical interpretability \citep{Aitchison1986}, or apply standard multivariate methods that fail to properly account for the inherent uncertainty structure in geochemical data \citep{Reimann2008}.
+
+\texttt{NeutroHydro} fills this gap by implementing a neutrosophic framework that explicitly represents each ion concentration as a triplet of truth (baseline), indeterminacy (uncertainty), and falsity (perturbation) values \citep{Smarandache1998}. This representation enables simultaneous modeling of multiple information channels while maintaining mathematical rigor through well-defined Euclidean space operations. The package is designed for hydrogeologists, environmental scientists, and water resource managers who need to:
+
+\begin{itemize}
+    \item Quantitatively separate natural and anthropogenic contributions in groundwater samples
+    \item Assess variable importance with channel-wise decomposition
+    \item Infer plausible mineral sources through stoichiometric constraints
+    \item Handle missing data and measurement uncertainty systematically
+    \item Generate interpretable results aligned with domain knowledge
+\end{itemize}
+
+The framework has been applied to groundwater quality assessment and has demonstrated capability in identifying pollution sources, characterizing baseline water chemistry, and diagnosing hydrogeochemical processes \citep{Abdul2024}.
+
+\section{Mathematical Framework}
+
+\subsection{Neutrosophic Data Representation}
+
+\texttt{NeutroHydro} maps each standardized ion concentration $x_{ij}$ (sample $i$, ion $j$) to a neutrosophic triplet $(T_{ij}, I_{ij}, F_{ij})$ where:
+
+\begin{itemize}
+    \item \textbf{Truth} ($T$): Baseline component computed via robust operators (median, low-rank approximation, or robust PCA)
+    \item \textbf{Indeterminacy} ($I$): Uncertainty/ambiguity channel quantifying measurement or epistemic uncertainty
+    \item \textbf{Falsity} ($F$): Perturbation likelihood derived from standardized residuals
+\end{itemize}
+
+For the Truth channel, the baseline operator $\mathcal{B}$ is applied to the standardized predictor matrix:
+
+\begin{equation}
+X_T = \mathcal{B}(X^{\text{std}})
+\end{equation}
+
+The residuals are computed as $R = X^{\text{std}} - X_T$, and the Falsity channel uses a monotone map:
+
+\begin{equation}
+F_{ij} = 1 - \exp\left(-\frac{|R_{ij}|}{\sigma_j}\right)
+\end{equation}
+
+where $\sigma_j$ is the robust scale (median absolute deviation) of residuals for ion $j$.
+
+\subsection{Augmented Hilbert Space Regression}
+
+The three channels are combined into an augmented predictor matrix:
+
+\begin{equation}
+X^{\text{aug}} = [X_T \quad \sqrt{\rho_I}X_I \quad \sqrt{\rho_F}X_F] \in \mathbb{R}^{n \times 3p}
+\end{equation}
+
+where $\rho_I$ and $\rho_F$ are channel weights. Elementwise precision weights derived from falsity downweight high-perturbation observations:
+
+\begin{equation}
+W_{ij} = \exp(-\lambda_F \cdot F_{ij})
+\end{equation}
+
+Probabilistic Neutrosophic PLS (PNPLS) regression is then performed on the weighted augmented matrix $\tilde{X}^{\text{aug}} = W \odot X^{\text{aug}}$ using the NIPALS algorithm \citep{Wold1966, Mevik2007} to extract latent components that predict a target variable $y$ (e.g., log total dissolved solids).
+
+\subsection{Variable Importance Decomposition}
+
+A key theoretical contribution is the \textbf{L2 decomposition theorem} for Variable Importance in Projection (VIP). For each ion $j$, the aggregate VIP satisfies:
+
+\begin{equation}
+\label{eq:vip_decomposition}
+VIP_{\text{agg}}^2(j) = VIP_T^2(j) + VIP_I^2(j) + VIP_F^2(j)
+\end{equation}
+
+This additive decomposition enables unambiguous attribution of prediction importance to baseline versus perturbation sources. The baseline fraction $\pi_G(j)$ for each ion is:
+
+\begin{equation}
+\pi_G(j) = \frac{VIP_T^2(j)}{VIP_T^2(j) + VIP_I^2(j) + VIP_F^2(j)} \in [0,1]
+\end{equation}
+
+Ions with $\pi_G(j) \geq 0.7$ are classified as baseline-dominant (geogenic), while $\pi_G(j) \leq 0.3$ indicates perturbation-dominant (anthropogenic).
+
+\subsection{Stoichiometric Mineral Inference}
+
+To link statistical patterns to physical processes, \texttt{NeutroHydro} implements stoichiometric inversion. Given ion concentrations $c \in \mathbb{R}^m$ in meq/L and a stoichiometric matrix $A \in \mathbb{R}^{m \times K}$ representing $K$ candidate minerals, the weighted non-negative least squares (NNLS) problem is:
+
+\begin{equation}
+\hat{s} = \arg\min_{s \geq 0} \|D(c - As)\|_2^2
+\end{equation}
+
+where $D = \text{diag}(\pi_G^{\eta})$ prioritizes baseline ions in the fit. The solution $\hat{s}$ represents plausible mineral contributions, validated through residual norms and contribution thresholds. The package includes a comprehensive mineral library and supports custom mineral definitions.
+
+\section{Features}
+
+\texttt{NeutroHydro} provides a complete pipeline implementation:
+
+\begin{enumerate}
+    \item \textbf{Preprocessing}: Robust centering and scaling using median and median absolute deviation (MAD) to resist outliers
+
+    \item \textbf{NDG Encoder}: Multiple baseline operators (global median, hydrofacies-conditioned median, low-rank SVD, robust PCA)
+
+    \item \textbf{PNPLS Regression}: Augmented space regression with configurable channel weights and precision weighting
+
+    \item \textbf{NVIP Computation}: Channel-wise variable importance with L2 decomposition
+
+    \item \textbf{Attribution Analysis}: Ion-level baseline fractions ($\pi_G$) and sample-level attribution ($G_i$)
+
+    \item \textbf{Mineral Inference}: Weighted NNLS inversion with plausibility assessment, thermodynamic validation via saturation indices, and diagnostic indices (Simpson Ratio, Base Exchange Index, Chloro-Alkaline Indices)
+
+    \item \textbf{Visualization}: Gibbs diagrams, VIP decomposition plots, mineral fraction charts, and correlation matrices
+
+    \item \textbf{Quality Assessment}: WHO guideline compliance, redox zonation, and pollution fingerprinting
+\end{enumerate}
+
+The package operates in absolute concentration space (mg/L, meq/L) rather than compositional space, preserving physical interpretability and enabling direct application of stoichiometric constraints. All operations occur in well-defined Euclidean spaces with rigorous mathematical guarantees.
+
+\section{Example Usage}
+
+The following code demonstrates the basic workflow:
+
+\begin{lstlisting}[caption={Basic usage of NeutroHydro pipeline}]
+import numpy as np
+from neutrohydro import NeutroHydroPipeline
+
+# Prepare data: ion concentrations (mg/L or meq/L) and target
+X = ...  # Shape: (n_samples, n_ions)
+y = ...  # Target: e.g., log TDS
+ion_names = ["Ca2+", "Mg2+", "Na+", "K+",
+             "HCO3-", "Cl-", "SO42-"]
+
+# Run complete pipeline
+pipeline = NeutroHydroPipeline()
+results = pipeline.fit(X, y, feature_names=ion_names)
+
+# Access results
+print(f"Model R2: {results.r2_train:.3f}")
+print(f"Baseline fractions (pi_G): {results.nsr.pi_G}")
+print(f"Baseline-dominant ions: {results.nsr.baseline_labels}")
+
+# Sample-level baseline fraction
+print(f"Sample baseline scores (G): {results.sample_attribution.G}")
+
+# Optional: mineral inference (requires meq/L)
+if results.mineral_result:
+    print(f"Plausible minerals: {results.mineral_result.plausible}")
+    print(f"Mineral fractions: {results.mineral_result.mineral_fractions}")
+\end{lstlisting}
+
+\section{Performance and Testing}
+
+The package includes comprehensive unit tests and integration tests covering all modules. Testing includes:
+
+\begin{itemize}
+    \item Preprocessing transformations and inverse transforms
+    \item NDG encoder with multiple baseline types
+    \item PNPLS regression with synthetic and real datasets
+    \item NVIP L2 decomposition verification
+    \item Attribution metrics and classification
+    \item Mineral inversion with stoichiometric constraints
+    \item Thermodynamic validation via PHREEQC integration
+\end{itemize}
+
+The NVIP L2 decomposition theorem (Equation \ref{eq:vip_decomposition}) is verified numerically to machine precision across diverse datasets, confirming the mathematical correctness of the implementation.
+
+\section{Availability and Documentation}
+
+\texttt{NeutroHydro} is released under the MIT License and is available on PyPI and GitHub:
+
+\begin{itemize}
+    \item \textbf{Installation}: \texttt{pip install neutrohydro}
+    \item \textbf{Repository}: \url{https://github.com/dabdul-wahab1988/neutrohydro}
+    \item \textbf{Documentation}: \url{https://github.com/dabdul-wahab1988/neutrohydro/tree/main/docs}
+\end{itemize}
+
+The package requires Python $\geq$ 3.9 and depends on NumPy \citep{Harris2020}, SciPy \citep{Virtanen2020}, scikit-learn \citep{Pedregosa2011}, and pandas \citep{McKinney2010}. Optional visualization features require Matplotlib \citep{Hunter2007} and Seaborn.
+
+Comprehensive documentation includes:
+\begin{itemize}
+    \item Mathematical framework and theory
+    \item API reference for all modules
+    \item Tutorial examples (basic and advanced)
+    \item Interpretation guides for results
+    \item Critical reviews addressing limitations
+\end{itemize}
+
+\section{Conclusions}
+
+\texttt{NeutroHydro} provides the first open-source implementation of neutrosophic chemometrics for groundwater analysis. By operating in absolute concentration space with explicit uncertainty quantification, the framework enables rigorous separation of geogenic and anthropogenic contributions while maintaining physical interpretability. The L2 decomposition theorem for variable importance provides mathematically sound attribution, and stoichiometric inversion links statistical patterns to hydrogeochemical processes. The package is designed for both research applications and operational water quality assessment, with comprehensive testing and documentation supporting reproducible science.
+
+\section*{Acknowledgements}
+
+We acknowledge the University of Ghana and the Ghana Atomic Energy Commission for institutional support. We thank the reviewers and the open-source Python scientific computing community, particularly the developers of NumPy \citep{Harris2020}, SciPy \citep{Virtanen2020}, scikit-learn \citep{Pedregosa2011}, pandas \citep{McKinney2010}, and Matplotlib \citep{Hunter2007}, upon which this package is built.
+
+\bibliographystyle{apalike}
+\bibliography{paper}
+
+\end{document}

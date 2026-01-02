@@ -23,7 +23,7 @@ class TestPipelineConfig:
         config = PipelineConfig()
 
         assert config.log_transform is False
-        assert config.baseline_type == "median"
+        assert config.baseline_type == "robust_pca"
         assert config.n_components == 5
         assert config.rho_I == 1.0
         assert config.rho_F == 1.0

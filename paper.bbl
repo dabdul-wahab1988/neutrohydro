@@ -1,0 +1,80 @@
+\begin{thebibliography}{}
+
+\bibitem[Abdul-Wahab and Asare, 2025]{Abdul2024}
+Abdul-Wahab, D. and Asare, E.~A. (2025).
+\newblock Neutrosophic chemometrics for groundwater quality assessment:
+  Application of the ndg framework.
+\newblock {\em In preparation}.
+\newblock Manuscript in preparation.
+
+\bibitem[Aitchison, 1986]{Aitchison1986}
+Aitchison, J. (1986).
+\newblock {\em The Statistical Analysis of Compositional Data}.
+\newblock Chapman and Hall, London.
+
+\bibitem[Harris et~al., 2020]{Harris2020}
+Harris, C.~R., Millman, K.~J., van~der Walt, S.~J., Gommers, R., Virtanen, P.,
+  Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N.~J., Kern, R.,
+  Picus, M., Hoyer, S., van Kerkwijk, M.~H., Brett, M., Haldane, A., del
+  R{\'i}o, J.~F., Wiebe, M., Peterson, P., G{\'e}rard-Marchant, P., Sheppard,
+  K., Reddy, T., Weckesser, W., Abbasi, H., Gohlke, C., and Oliphant, T.~E.
+  (2020).
+\newblock Array programming with numpy.
+\newblock {\em Nature}, 585(7825):357--362.
+
+\bibitem[Hunter, 2007]{Hunter2007}
+Hunter, J.~D. (2007).
+\newblock Matplotlib: A 2d graphics environment.
+\newblock {\em Computing in Science \& Engineering}, 9(3):90--95.
+
+\bibitem[McKinney, 2010]{McKinney2010}
+McKinney, W. (2010).
+\newblock Data structures for statistical computing in python.
+\newblock In van~der Walt, S. and Millman, J., editors, {\em Proceedings of the
+  9th Python in Science Conference}, pages 56--61.
+
+\bibitem[Mevik and Wehrens, 2007]{Mevik2007}
+Mevik, B.-H. and Wehrens, R. (2007).
+\newblock The pls package: Principal component and partial least squares
+  regression in r.
+\newblock {\em Journal of Statistical Software}, 18(2):1--23.
+
+\bibitem[Pedregosa et~al., 2011]{Pedregosa2011}
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel,
+  O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J.,
+  Passos, A., Cournapeau, D., Brucher, M., Perrot, M., and Duchesnay, {\'E}.
+  (2011).
+\newblock Scikit-learn: Machine learning in python.
+\newblock {\em Journal of Machine Learning Research}, 12:2825--2830.
+
+\bibitem[Reimann and Filzmoser, 2008]{Reimann2008}
+Reimann, C. and Filzmoser, P. (2008).
+\newblock Normal and lognormal data distribution in geochemistry: death of a
+  myth. consequences for the statistical treatment of geochemical and
+  environmental data.
+\newblock {\em Environmental Geology}, 39(9):1001--1014.
+
+\bibitem[Smarandache, 1998]{Smarandache1998}
+Smarandache, F. (1998).
+\newblock Neutrosophy: Neutrosophic probability, set, and logic.
+\newblock {\em American Research Press}, pages 1--105.
+
+\bibitem[Virtanen et~al., 2020]{Virtanen2020}
+Virtanen, P., Gommers, R., Oliphant, T.~E., Haberland, M., Reddy, T.,
+  Cournapeau, D., Burovski, E., Peterson, P., Weckesser, W., Bright, J.,
+  van~der Walt, S.~J., Brett, M., Wilson, J., Millman, K.~J., Mayorov, N.,
+  Nelson, A. R.~J., Jones, E., Kern, R., Larson, E., Carey, C.~J., Polat,
+  {\.I}., Feng, Y., Moore, E.~W., VanderPlas, J., Laxalde, D., Perktold, J.,
+  Cimrman, R., Henriksen, I., Quintero, E.~A., Harris, C.~R., Archibald, A.~M.,
+  Ribeiro, A.~H., Pedregosa, F., van Mulbregt, P., and Contributors, S.~.
+  (2020).
+\newblock Scipy 1.0: Fundamental algorithms for scientific computing in python.
+\newblock {\em Nature Methods}, 17:261--272.
+
+\bibitem[Wold, 1966]{Wold1966}
+Wold, H. (1966).
+\newblock Estimation of principal components and related models by iterative
+  least squares.
+\newblock {\em Multivariate Analysis}, pages 391--420.
+
+\end{thebibliography}

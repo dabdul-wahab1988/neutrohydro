@@ -16,19 +16,43 @@ from neutrohydro.nvip import compute_nvip, NVIPResult
 from neutrohydro.attribution import compute_nsr, compute_sample_baseline_fraction
 from neutrohydro.minerals import MineralInverter, STANDARD_MINERALS
 from neutrohydro.pipeline import NeutroHydroPipeline
-from neutrohydro.visualization import (
-    plot_gibbs,
-    plot_ilr_classification,
-    plot_correlation_matrix,
-    plot_mineral_fractions,
-    plot_saturation_indices,
-    plot_vip_decomposition,
-    generate_report,
-    mg_to_meq,
-    classify_water_type,
-    create_figure,
-    PRESETS,
-)
+
+_VIZ_IMPORT_ERROR: Exception | None = None
+
+try:
+    from neutrohydro.visualization import (
+        plot_gibbs,
+        plot_ilr_classification,
+        plot_correlation_matrix,
+        plot_mineral_fractions,
+        plot_saturation_indices,
+        plot_vip_decomposition,
+        generate_report,
+        mg_to_meq,
+        classify_water_type,
+        create_figure,
+        PRESETS,
+    )
+except Exception as exc:  # optional deps: matplotlib/seaborn
+    _VIZ_IMPORT_ERROR = exc
+
+    def _viz_unavailable(*_args, **_kwargs):
+        raise ImportError(
+            "Visualization utilities require optional dependencies. "
+            "Install with `pip install neutrohydro[viz]` (or `neutrohydro[all]`)."
+        ) from _VIZ_IMPORT_ERROR
+
+    plot_gibbs = _viz_unavailable
+    plot_ilr_classification = _viz_unavailable
+    plot_correlation_matrix = _viz_unavailable
+    plot_mineral_fractions = _viz_unavailable
+    plot_saturation_indices = _viz_unavailable
+    plot_vip_decomposition = _viz_unavailable
+    generate_report = _viz_unavailable
+    mg_to_meq = _viz_unavailable
+    classify_water_type = _viz_unavailable
+    create_figure = _viz_unavailable
+    PRESETS = {}
 
 __version__ = "1.0.0"
 __author__ = "Dickson Abdul-Wahab"

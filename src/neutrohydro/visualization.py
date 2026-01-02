@@ -24,6 +24,33 @@ import matplotlib.figure
 import matplotlib.axes
 import seaborn as sns
 
+
+def _missing_columns(df: pd.DataFrame, required: List[str]) -> List[str]:
+    return [c for c in required if c not in df.columns]
+
+
+def _require_columns(df: pd.DataFrame, required: List[str], context: str) -> None:
+    missing = _missing_columns(df, required)
+    if missing:
+        raise ValueError(
+            f"{context} requires columns: {required}. Missing: {missing}."
+        )
+
+
+def _safe_divide(num: np.ndarray, den: np.ndarray) -> np.ndarray:
+    num = np.asarray(num, dtype=float)
+    den = np.asarray(den, dtype=float)
+    out = np.full(np.broadcast(num, den).shape, np.nan, dtype=float)
+    np.divide(num, den, out=out, where=(den != 0) & np.isfinite(den) & np.isfinite(num))
+    return out
+
+
+def _safe_log(x: np.ndarray) -> np.ndarray:
+    x = np.asarray(x, dtype=float)
+    out = np.full_like(x, np.nan, dtype=float)
+    np.log(x, out=out, where=(x > 0) & np.isfinite(x))
+    return out
+
 # =============================================================================
 # STYLE CONFIGURATION
 # =============================================================================
@@ -176,11 +203,18 @@ def classify_water_type(
         Classification like 'Ca-HCO₃', 'Na-Cl', etc.
     """
     # Cations: Ca, Mg, Na, K
-    total_cations = row['Ca_meq'] + row['Mg_meq'] + row['Na_meq'] + row['K_meq']
-    ca_frac = row['Ca_meq'] / total_cations
-    mg_frac = row['Mg_meq'] / total_cations
-    na_frac = row['Na_meq'] / total_cations
-    k_frac = row['K_meq'] / total_cations
+    ca = float(row.get('Ca_meq', 0.0) or 0.0)
+    mg = float(row.get('Mg_meq', 0.0) or 0.0)
+    na = float(row.get('Na_meq', 0.0) or 0.0)
+    k = float(row.get('K_meq', 0.0) or 0.0)
+    total_cations = ca + mg + na + k
+    if not np.isfinite(total_cations) or total_cations <= 0:
+        return 'Mixed'
+
+    ca_frac = ca / total_cations
+    mg_frac = mg / total_cations
+    na_frac = na / total_cations
+    k_frac = k / total_cations
 
     cations = []
     if ca_frac > cation_threshold or ca_frac > 0.25:
@@ -193,10 +227,16 @@ def classify_water_type(
         cations.append('K')
 
     # Anions: HCO3, Cl, SO4 (major anions only)
-    total_anions = row['HCO3_meq'] + row['Cl_meq'] + row['SO4_meq']
-    hco3_frac = row['HCO3_meq'] / total_anions
-    cl_frac = row['Cl_meq'] / total_anions
-    so4_frac = row['SO4_meq'] / total_anions
+    hco3 = float(row.get('HCO3_meq', 0.0) or 0.0)
+    cl = float(row.get('Cl_meq', 0.0) or 0.0)
+    so4 = float(row.get('SO4_meq', 0.0) or 0.0)
+    total_anions = hco3 + cl + so4
+    if not np.isfinite(total_anions) or total_anions <= 0:
+        return 'Mixed'
+
+    hco3_frac = hco3 / total_anions
+    cl_frac = cl / total_anions
+    so4_frac = so4 / total_anions
 
     anions = []
     if hco3_frac > anion_threshold or hco3_frac > 0.25:
@@ -239,6 +279,9 @@ def plot_gibbs(
     
     if df_meq is None:
         df_meq = mg_to_meq(df)
+
+    _require_columns(df, ['TDS'], 'plot_gibbs')
+    _require_columns(df_meq, ['Na_meq', 'Ca_meq', 'Cl_meq', 'HCO3_meq'], 'plot_gibbs')
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
@@ -263,10 +306,10 @@ def _plot_gibbs_cations(
 ) -> None:
     """Render Gibbs cation plot onto provided axes."""
     tds = df['TDS']
-    na = df_meq['Na_meq']
-    ca = df_meq['Ca_meq']
-    
-    na_ratio = na / (na + ca)
+    na = df_meq['Na_meq'].to_numpy(dtype=float)
+    ca = df_meq['Ca_meq'].to_numpy(dtype=float)
+
+    na_ratio = _safe_divide(na, na + ca)
     
     ax.scatter(na_ratio, tds, c='steelblue', edgecolor='black', s=80, alpha=0.7)
     ax.set_yscale('log')
@@ -294,10 +337,10 @@ def _plot_gibbs_anions(
 ) -> None:
     """Render Gibbs anion plot onto provided axes."""
     tds = df['TDS']
-    cl = df_meq['Cl_meq']
-    hco3 = df_meq['HCO3_meq']
-    
-    cl_ratio = cl / (cl + hco3)
+    cl = df_meq['Cl_meq'].to_numpy(dtype=float)
+    hco3 = df_meq['HCO3_meq'].to_numpy(dtype=float)
+
+    cl_ratio = _safe_divide(cl, cl + hco3)
     
     ax.scatter(cl_ratio, tds, c='steelblue', edgecolor='black', s=80, alpha=0.7)
     ax.set_yscale('log')
@@ -346,6 +389,12 @@ def plot_ilr_classification(
     
     if df_meq is None:
         df_meq = mg_to_meq(df)
+
+    _require_columns(
+        df_meq,
+        ['Ca_meq', 'Mg_meq', 'Na_meq', 'K_meq', 'HCO3_meq', 'Cl_meq', 'SO4_meq'],
+        'plot_ilr_classification',
+    )
     
     # Classify water types
     df_meq['water_type'] = df_meq.apply(classify_water_type, axis=1)
@@ -353,14 +402,22 @@ def plot_ilr_classification(
     
     # Color palette
     unique_water_types = df_meq['water_type'].cat.categories
-    colors = plt.cm.Paired(np.linspace(0, 1, len(unique_water_types)))
+    colors = plt.get_cmap('Paired')(np.linspace(0, 1, len(unique_water_types)))
     color_map = dict(zip(unique_water_types, colors))
     
-    # Calculate ILR coordinates
-    z1 = np.sqrt(2/3) * np.log(np.sqrt(df_meq['Ca_meq'] * df_meq['Mg_meq']) / (df_meq['Na_meq'] + df_meq['K_meq']))
-    z2 = 1/np.sqrt(2) * np.log(df_meq['Ca_meq'] / df_meq['Mg_meq'])
-    z3 = np.sqrt(2/3) * np.log(np.sqrt(df_meq['Cl_meq'] * df_meq['SO4_meq']) / df_meq['HCO3_meq'])
-    z4 = 1/np.sqrt(2) * np.log(df_meq['Cl_meq'] / df_meq['SO4_meq'])
+    # Calculate ILR coordinates (guard against zeros/non-positive values)
+    ca = df_meq['Ca_meq'].to_numpy(dtype=float)
+    mg = df_meq['Mg_meq'].to_numpy(dtype=float)
+    na = df_meq['Na_meq'].to_numpy(dtype=float)
+    k = df_meq['K_meq'].to_numpy(dtype=float)
+    hco3 = df_meq['HCO3_meq'].to_numpy(dtype=float)
+    cl = df_meq['Cl_meq'].to_numpy(dtype=float)
+    so4 = df_meq['SO4_meq'].to_numpy(dtype=float)
+
+    z1 = np.sqrt(2 / 3) * _safe_log(_safe_divide(np.sqrt(ca * mg), (na + k)))
+    z2 = (1 / np.sqrt(2)) * _safe_log(_safe_divide(ca, mg))
+    z3 = np.sqrt(2 / 3) * _safe_log(_safe_divide(np.sqrt(cl * so4), hco3))
+    z4 = (1 / np.sqrt(2)) * _safe_log(_safe_divide(cl, so4))
     
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(9, 7))
     
@@ -663,7 +720,7 @@ def plot_mineral_fractions(
     
     bottom = np.zeros(len(sample_indices))
 
-    colors = plt.cm.tab20(np.linspace(0, 1, len(names_active)))
+    colors = plt.get_cmap('tab20')(np.linspace(0, 1, len(names_active)))
     
     for i, (name, color) in enumerate(zip(names_active, colors)):
         values = fractions_active[:, i]
@@ -674,7 +731,7 @@ def plot_mineral_fractions(
     ax.set_ylabel('Mineral Fraction', fontsize=12)
     ax.set_title('Mineral Composition', fontsize=14)
     ax.set_xticks(x)
-    ax.set_xticklabels(sample_indices, rotation=45, ha='right')
+    ax.set_xticklabels([str(i) for i in sample_indices], rotation=45, ha='right')
     ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=9)
     ax.set_ylim(0, 1)
     
@@ -715,7 +772,7 @@ def _plot_mineral_fractions(
 
     x = np.arange(len(sample_indices))
     bottom = np.zeros(len(sample_indices))
-    colors = plt.cm.tab20(np.linspace(0, 1, len(names_active)))
+    colors = plt.get_cmap('tab20')(np.linspace(0, 1, len(names_active)))
     
     for i, (name, color) in enumerate(zip(names_active, colors)):
         values = fractions_active[:, i]
@@ -726,7 +783,7 @@ def _plot_mineral_fractions(
     ax.set_ylabel('Fraction', fontsize=10)
     ax.set_title('Mineral Fractions', fontsize=11)
     ax.set_xticks(x)
-    ax.set_xticklabels(sample_indices, rotation=45, ha='right', fontsize=8)
+    ax.set_xticklabels([str(i) for i in sample_indices], rotation=45, ha='right', fontsize=8)
     ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=7)
     ax.set_ylim(0, 1)
 
@@ -849,8 +906,15 @@ def _plot_mineral_plausibility(
     data = mineral_result.thermo_plausible.astype(int)[:10, :]  # First 10 samples
     names = mineral_result.mineral_names or [f'M{i}' for i in range(data.shape[1])]
     
-    sns.heatmap(data.T, cmap='RdYlGn', center=0.5, ax=ax, cbar=False,
-                yticklabels=names, xticklabels=range(data.shape[0]))
+    sns.heatmap(
+        data.T,
+        cmap='RdYlGn',
+        center=0.5,
+        ax=ax,
+        cbar=False,
+        yticklabels=names,
+        xticklabels=[str(i) for i in range(data.shape[0])],
+    )
     ax.set_xlabel('Sample', fontsize=10)
     ax.set_title('Thermo Plausibility', fontsize=11)
 
@@ -980,7 +1044,10 @@ def _plot_vip_aggregate(
     
     df = df.sort_values('VIP_agg', ascending=False)
     
-    sns.barplot(x='feature', y='VIP_agg', data=df, palette='viridis', ax=ax, hue='feature', legend=False)
+    sns.barplot(x='feature', y='VIP_agg', data=df, palette='viridis', ax=ax, hue='feature')
+    legend = ax.get_legend()
+    if legend is not None:
+        legend.remove()
     ax.axhline(1, color='red', linestyle='--', alpha=0.7)
     ax.set_xticks(np.arange(len(df)))
     ax.set_xticklabels(df['feature'], rotation=45, ha='right', fontsize=8)
@@ -1025,7 +1092,10 @@ def _plot_baseline_fraction(
     df = df.sort_values('pi_G', ascending=False)
     ion_col = 'ion' if 'ion' in df.columns else 'feature'
     
-    sns.barplot(x=ion_col, y='pi_G', data=df, palette='magma', ax=ax, hue=ion_col, legend=False)
+    sns.barplot(x=ion_col, y='pi_G', data=df, palette='magma', ax=ax, hue=ion_col)
+    legend = ax.get_legend()
+    if legend is not None:
+        legend.remove()
     ax.set_xticks(np.arange(len(df)))
     ax.set_xticklabels(df[ion_col], rotation=45, ha='right', fontsize=8)
     ax.set_ylabel('πG', fontsize=10)
@@ -1051,7 +1121,7 @@ def _plot_g_histogram(
         ax.text(0.5, 0.5, 'No G data', ha='center', va='center', transform=ax.transAxes)
         return
     
-    sns.histplot(g_values, bins=20, kde=False, color='steelblue', ax=ax)
+    sns.histplot(x=g_values, bins=20, kde=False, color='steelblue', ax=ax)
     ax.set_xlabel('G (baseline fraction)', fontsize=10)
     ax.set_title('Sample G Distribution', fontsize=11)
 
@@ -1218,9 +1288,15 @@ def create_figure(
             
             # Call with appropriate data
             if plot_type == 'gibbs':
-                func(ax, df, df_meq)
+                if df is None or df_meq is None:
+                    ax.text(0.5, 0.5, 'Missing df/df_meq', ha='center', va='center', transform=ax.transAxes)
+                else:
+                    func(ax, df, df_meq)
             elif plot_type == 'diagnostic':
-                func(ax, df, df_meq)
+                if df is None:
+                    ax.text(0.5, 0.5, 'Missing df', ha='center', va='center', transform=ax.transAxes)
+                else:
+                    func(ax, df, df_meq)
             elif plot_type == 'mineral':
                 func(ax, mineral_result)
             elif plot_type == 'vip' or plot_type == 'model':
