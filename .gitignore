@@ -1,0 +1,32 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Build and packaging artifacts (pip install -e ., python -m build)
+build/
+dist/
+*.egg-info/
+
+# Test and dev-tool caches (pytest, pytest-cov, mypy, ruff)
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# LaTeX by-products of building paper.tex (paper.bbl is kept on purpose)
+*.aux
+*.log
+*.out
+*.blg
+*.toc
+*.synctex.gz
+
+# Output written by the example scripts and the CLIs
+results_*/
+neutrohydro_results/
+/pipeline_figures/
+/figures/
+/results/
+data3_quality_report.csv
+integrated_results.csv

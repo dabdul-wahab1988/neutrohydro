@@ -57,5 +57,9 @@ The core dependencies are automatically installed:
 - `pandas`
 - `scikit-learn`
 - `scipy`
-- `matplotlib` (for plotting)
-- `seaborn` (for advanced visualization)
+
+Optional extras:
+- `viz`: `matplotlib` and `seaborn` for plotting
+- `thermo`: `phreeqpython` for PHREEQC thermodynamic validation (saturation indices)
+
+Install an extra with, for example, `pip install ".[thermo]"`, or `pip install ".[all]"` for everything.
