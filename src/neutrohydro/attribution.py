@@ -136,7 +136,8 @@ def compute_sample_baseline_fraction(
 
     Notes
     -----
-    For sample i:
+    For sample i (channels are precision-weighted and centered exactly as
+    in ``PNPLS.predict``):
         c_ij = (X_T)_ij * beta_T(j) + (X_I)_ij * beta_I(j) + (X_F)_ij * beta_F(j)
         w_ij = |c_ij|  (attribution mass)
 
@@ -155,16 +156,17 @@ def compute_sample_baseline_fraction(
     beta_I = coeffs["beta_I"]
     beta_F = coeffs["beta_F"]
 
-    # Get precision-weighted data
-    W_precision = np.exp(-model.lambda_F * triplets.F)
-
-    # Weighted channels
-    X_T_weighted = W_precision * triplets.T
-    X_I_weighted = W_precision * np.sqrt(model.rho_I) * triplets.I
-    X_F_weighted = W_precision * np.sqrt(model.rho_F) * triplets.F
+    # Precision-weighted, centered augmented design (the exact matrix the
+    # model multiplies by beta), split back into its three channel blocks.
+    X_design = model.centered_design(triplets)
+    p = triplets.T.shape[1]
+    X_T_weighted = X_design[:, :p]
+    X_I_weighted = X_design[:, p:2 * p]
+    X_F_weighted = X_design[:, 2 * p:]
 
     # Compute net contribution per ion per sample
     # c_ij = weighted_T * beta_T + weighted_I * beta_I + weighted_F * beta_F
+    # (sum_j c_ij equals the prediction minus the intercept)
     c = X_T_weighted * beta_T + X_I_weighted * beta_I + X_F_weighted * beta_F
 
     # Attribution mass (absolute value to avoid sign cancellation)

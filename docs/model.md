@@ -94,19 +94,14 @@ q ← zeros(k)      # Response loadings
 
 $$w_h = \frac{X_{\text{deflated}}^\top y_{\text{deflated}}}{\|X_{\text{deflated}}^\top y_{\text{deflated}}\|}$$
 
-**Step 2: Iterative refinement** (until convergence)
+**Step 2: No inner iteration for a single response**
 
-
-Repeat:
-  $$w_{\text{old}} \leftarrow w_h$$
-    # Score
-  $$t_h \leftarrow X_{\text{deflated}} \cdot w_h$$
-  $$t_h \leftarrow \frac{t_h}{\|t_h\|}$$
-    # Weight update
-  $$w_h \leftarrow X_{\text{deflated}}^\top \cdot t_h$$
-    $$w_h \leftarrow \frac{w_h}{\|w_h\|}$$
-Until $$\|w_h - w_{\text{old}}\| < \text{tol}$$
-
+For PLS1 the weight in Step 1 is already the optimum: it maximises
+$\operatorname{cov}(X_{\text{deflated}} w, y_{\text{deflated}})$ over unit vectors
+(Cauchy–Schwarz). An inner loop $w \leftarrow X^\top X w / \|\cdot\|$ must **not**
+be applied: it is the power method on $X^\top X$ and converges to the first
+principal component, which turns PLS into principal component regression
+(see Section 13). Versions before this fix contained that loop.
 
 **Step 3: Final score and loadings**
 
@@ -242,72 +237,36 @@ PLS naturally handles **multicollinearity** (unlike ordinary least squares):
 
 **Result**: PLS typically outperforms PCR for prediction.
 
-### 13. NIPALS Convergence
+### 13. Why PLS1 Needs No Inner Iteration
 
-The NIPALS algorithm (Section 4) iteratively refines weight vectors. We prove convergence.
+**Proposition.** For a single response the PLS weight of component $h$ is
 
-#### Theorem: NIPALS Convergence
+$$w_h = \frac{X_h^\top y_h}{\|X_h^\top y_h\|},$$
 
-**Theorem**: For non-zero data matrix $X$ and target $y$, the NIPALS iterative update:
+with $X_h, y_h$ the deflated (centered) data.
 
-  $$w^{(t+1)} = X^T t^{(t)} / ||X^T t^{(t)}||$$
-  $$t^{(t+1)} = X w^{(t+1)} / ||X w^{(t+1)}||$$
+**Proof.** PLS chooses $w$ to maximise $\operatorname{cov}(X_h w, y_h)^2 = (w^\top X_h^\top y_h)^2$
+subject to $\|w\| = 1$. By Cauchy–Schwarz the maximiser is the normalised vector
+$X_h^\top y_h$. Equivalently, $X_h^\top y_h y_h^\top X_h$ has rank one and its leading
+eigenvector is $X_h^\top y_h$. $\square$
 
-converges to the **leading left and right singular vectors** of the matrix $X^T y y^T X$ (scaled by norms).
+**The previous inner loop was a different algorithm.** Earlier versions refined $w$ with
 
-**Proof**:
+$$w^{(t+1)} = \frac{X_h^\top X_h w^{(t)}}{\|X_h^\top X_h w^{(t)}\|},$$
 
-Consider the NIPALS iteration for component $h$:
+the power method on $M = X_h^\top X_h$. It converges to the leading eigenvector $v_1$
+of $X_h^\top X_h$ (the first principal component), whatever $y$ is. The resulting
+model was principal component regression, not PLS. The earlier version of this section
+proved exactly that convergence, which is the bug. On a test problem whose response
+lies along a low-variance direction, the 1-component $R^2$ was $0.0007$ with the loop
+and $0.68$ without it. The implementation now matches `sklearn.cross_decomposition.PLSRegression`
+(tested in `tests/test_model.py::TestPLS1Correctness`).
 
-**Initialization**: $w_h^{(0)} = X^T y / \|X^T y\|$
-
-**Iteration** $t = 0, 1, 2, \ldots$:
-
-1. $t_h^{(t)} = X w_h^{(t)} / \|X w_h^{(t)}\|$
-2. $w_h^{(t+1)} = X^T t_h^{(t)} / \|X^T t_h^{(t)}\|$
-
-**Combine** steps:
-$$w_h^{(t+1)} = \frac{X^T (X w_h^{(t)} / \|X w_h^{(t)}\|)}{\|X^T (X w_h^{(t)} / \|X w_h^{(t)}\|)\|}$$
-
-Let $M = X^T X$. Then (ignoring normalization momentarily):
-$$w_h^{(t+1)} \propto X^T X w_h^{(t)} = M w_h^{(t)}$$
-
-$$w_h^{(t)} \propto M^t w_h^{(0)}$$
-
-This is the **power method** applied to matrix $M = X^T X$.
-
-**Convergence of Power Method**:
-
-Let $M = X^T X$ have eigendecomposition:
-$$M = V \Lambda V^T$$
-
-where $\lambda_1 \geq \lambda_2 \geq \ldots \geq \lambda_p \geq 0$ and $V = [v_1 \mid v_2 \mid \ldots \mid v_p]$ are orthonormal eigenvectors.
-
-Expand initial vector:
-$$w_h^{(0)} = \sum_{i=1}^p \alpha_i v_i$$
-
-After $t$ iterations:
-$$M^t w_h^{(0)} = \sum_{i=1}^p \alpha_i \lambda_i^t v_i = \lambda_1^t \left(\alpha_1 v_1 + \sum_{i=2}^p \alpha_i \left(\frac{\lambda_i}{\lambda_1}\right)^t v_i\right)$$
-
-Since $|\lambda_i/\lambda_1| < 1$ for $i > 1$:
-$$\lim_{t \to \infty} \frac{M^t w_h^{(0)}}{\|M^t w_h^{(0)}\|} = \pm v_1$$
-
-(assuming $\alpha_1 \neq 0$, which holds generically).
-
-**Convergence Rate**:
-$$\|w_h^{(t)} - v_1\| = O\left(\left|\frac{\lambda_2}{\lambda_1}\right|^t\right)$$
-
-**Practical implication**: NIPALS converges **exponentially fast** when the leading eigenvalue is well-separated from the second eigenvalue.
-
-$\square$
-
-#### Corollary: Convergence Tolerance
-
-**Typical tolerance**: $\|w_h^{(t+1)} - w_h^{(t)}\| < \epsilon$ with $\epsilon = 10^{-6}$.
-
-**Expected iterations**: $t \approx \log(\epsilon) / \log(|\lambda_2/\lambda_1|)$.
-
-For typical data with $\lambda_1/\lambda_2 \approx 2$–5, convergence in **5–15 iterations**.
+**Centering and intercept.** The augmented matrix and the target are mean-centered
+(weighted means if sample weights are used) and the model predicts
+$\hat y = (\tilde x^{(\text{aug})} - \bar x^{(\text{aug})})^\top \beta + \bar y$.
+Without centering, channels with non-zero means (a constant median baseline,
+memberships in $[0,1]$) act as a hidden intercept and distort VIP and attribution.
 
 ## Hyperparameters
 
