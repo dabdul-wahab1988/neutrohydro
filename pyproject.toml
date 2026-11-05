@@ -55,8 +55,11 @@ viz = [
     "matplotlib>=3.5.0",
     "seaborn>=0.12.0",
 ]
+thermo = [
+    "phreeqpython>=1.4.0",
+]
 all = [
-    "neutrohydro[dev,viz]",
+    "neutrohydro[dev,viz,thermo]",
 ]
 
 [project.scripts]
