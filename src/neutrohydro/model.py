@@ -3,9 +3,19 @@ PNPLS (Probabilistic Neutrosophic PLS) Model for NeutroHydro.
 
 Implements Section 4 of the specification:
 - Augmented predictor space combining T, I, F channels
-- Elementwise precision weights from falsity
-- PLS1 regression via NIPALS algorithm
+- Elementwise precision weights from falsity (legacy NDG encoding) or
+  sample (row) weights for the Jacobian-orthogonal encoding
+- PLS1 regression via NIPALS algorithm (with mean-centering and intercept)
 - Optional EM-like imputation for missing data
+
+Note on the PLS1 weight vector
+------------------------------
+For a single response the NIPALS weight of component h is available in
+closed form, w_h = X_h^T y_h / ||X_h^T y_h|| (X_h, y_h deflated). Earlier
+versions refined w_h with the update w <- X_h^T X_h w, which is a power
+iteration: it converges to the leading *principal component* of X_h and
+silently turned the model into principal component regression. The
+closed form is used now; it matches scikit-learn's PLSRegression.
 """
 
 from dataclasses import dataclass
@@ -50,18 +60,31 @@ class PNPLS:
         Strength of falsity-based precision weighting.
         Higher values downweight observations with high falsity more.
     tol : float, default=1e-6
-        Convergence tolerance for NIPALS algorithm.
+        Numerical tolerance used to stop extracting components when the
+        remaining covariance with y (or the score norm) vanishes.
     max_iter : int, default=500
-        Maximum iterations for NIPALS.
+        Unused; kept for backward compatibility. PLS1 needs no inner
+        iteration (see module notes).
     em_max_iter : int, default=20
         Maximum EM iterations for missing data imputation.
     em_tol : float, default=1e-4
         Convergence tolerance for EM imputation.
+    center : bool, default=True
+        Mean-center the (weighted) augmented predictors and the target and
+        fit an intercept. Without centering, constant or non-negative
+        channels (e.g. a median baseline, or I/F memberships in [0, 1])
+        act as a hidden intercept and distort VIP and attribution.
 
     Attributes
     ----------
     components_ : PLSComponents
         Fitted PLS components and coefficients.
+    x_mean_ : ndarray of shape (3p,)
+        Column means of the weighted augmented matrix (zeros if center=False).
+    y_mean_ : float
+        Target mean (0 if center=False).
+    sample_weights_ : ndarray of shape (n,) or None
+        Row weights used in fitting (orthogonal encoding only).
     is_fitted_ : bool
         Whether the model has been fitted.
     """
@@ -76,6 +99,7 @@ class PNPLS:
         max_iter: int = 500,
         em_max_iter: int = 20,
         em_tol: float = 1e-4,
+        center: bool = True,
     ):
         self.n_components = n_components
         self.rho_I = rho_I
@@ -85,8 +109,12 @@ class PNPLS:
         self.max_iter = max_iter
         self.em_max_iter = em_max_iter
         self.em_tol = em_tol
+        self.center = center
 
         self.components_: Optional[PLSComponents] = None
+        self.x_mean_: Optional[NDArray[np.floating]] = None
+        self.y_mean_: float = 0.0
+        self.sample_weights_: Optional[NDArray[np.floating]] = None
         self.is_fitted_: bool = False
 
     def _build_augmented_matrix(
@@ -131,9 +159,23 @@ class PNPLS:
         W_aug : ndarray of shape (n_samples, 3*n_features)
             Precision weights for augmented space (repeated for each channel).
         """
+        if getattr(triplets, "encoding", "ndg") == "orthogonal":
+            # Jacobian-orthogonal channels carry signed components, not
+            # memberships. Elementwise re-weighting would mix the channels
+            # (it multiplies T by a function of F), so robustness is handled
+            # with sample (row) weights instead -- see `fit`.
+            return np.ones((triplets.T.shape[0], 3 * triplets.T.shape[1]))
         W = np.exp(-self.lambda_F * triplets.F)
         # Repeat weights for all three channels
         return np.hstack([W, W, W])
+
+    def _weighted_design(
+        self,
+        triplets: TripletData,
+    ) -> NDArray[np.floating]:
+        """Augmented matrix after (legacy) elementwise precision weighting."""
+        X_aug = self._build_augmented_matrix(triplets)
+        return self._compute_precision_weights(triplets) * X_aug
 
     def _nipals_pls1(
         self,
@@ -174,35 +216,18 @@ class PNPLS:
         total_ss_y = np.sum(y ** 2)
 
         for h in range(k):
-            # Initial weight: proportional to covariance with y
+            # PLS1 weight: closed form, proportional to covariance with y.
+            # (No inner iteration: iterating w <- X'X w would converge to the
+            # first principal component of X, not to the PLS direction.)
             w = X_deflated.T @ y_deflated
             w_norm = np.linalg.norm(w)
             if w_norm < self.tol:
-                # No more variance to explain
+                # No more covariance with y to explain
                 k = h
                 break
             w = w / w_norm
 
-            # Iterative refinement (optional, for weighted PLS)
-            for _ in range(self.max_iter):
-                w_old = w.copy()
-
-                # Compute score
-                t = X_deflated @ w
-
-                # Normalize score
-                t_norm = np.linalg.norm(t)
-                if t_norm < self.tol:
-                    break
-
-                # Update weight
-                w = X_deflated.T @ t / (t.T @ t)
-                w = w / (np.linalg.norm(w) + 1e-16)
-
-                if np.linalg.norm(w - w_old) < self.tol:
-                    break
-
-            # Final score computation
+            # Score
             t = X_deflated @ w
             t_sq = t.T @ t
 
@@ -211,7 +236,7 @@ class PNPLS:
                 break
 
             # X loading
-            p = X_deflated.T @ t / t_sq
+            p_h = X_deflated.T @ t / t_sq
 
             # y loading
             q = y_deflated.T @ t / t_sq
@@ -219,14 +244,14 @@ class PNPLS:
             # Store
             T_scores[:, h] = t
             W_weights[:, h] = w
-            P_loadings[:, h] = p
+            P_loadings[:, h] = p_h
             q_loadings[h] = q
 
             # Response energy for this component
             SSY[h] = q ** 2 * t_sq
 
             # Deflation
-            X_deflated = X_deflated - np.outer(t, p)
+            X_deflated = X_deflated - np.outer(t, p_h)
             y_deflated = y_deflated - t * q
 
         # Trim to actual number of components
@@ -237,6 +262,12 @@ class PNPLS:
         SSY = SSY[:k]
 
         # Compute regression coefficients: beta = W * (P'W)^-1 * q
+        if k == 0:
+            return PLSComponents(
+                T=T_scores, W=W_weights, P=P_loadings, q=q_loadings,
+                beta=np.zeros(p), n_components=0,
+                explained_variance=SSY,
+            )
         PW = P_loadings.T @ W_weights
         try:
             PW_inv = np.linalg.inv(PW)
@@ -263,6 +294,7 @@ class PNPLS:
         triplets: TripletData,
         y: NDArray[np.floating],
         missing_mask: Optional[NDArray[np.bool_]] = None,
+        sample_weights: Optional[NDArray[np.floating]] = None,
     ) -> "PNPLS":
         """
         Fit PNPLS model on neutrosophic triplets and target.
@@ -270,12 +302,17 @@ class PNPLS:
         Parameters
         ----------
         triplets : TripletData
-            Neutrosophic triplet channels from NDGEncoder.
+            Neutrosophic triplet channels from NDGEncoder or
+            OrthogonalNDGEncoder.
         y : ndarray of shape (n_samples,)
             Standardized target vector.
         missing_mask : ndarray of shape (n_samples, n_features), optional
             Boolean mask where True indicates observed values.
             If provided, uses EM-like imputation.
+        sample_weights : ndarray of shape (n_samples,), optional
+            Row weights (weighted least squares). Defaults to
+            ``triplets.sample_weights`` when the triplets come from the
+            orthogonal encoder, otherwise uniform.
 
         Returns
         -------
@@ -284,41 +321,70 @@ class PNPLS:
         """
         y = np.asarray(y, dtype=np.float64).ravel()
 
-        # Build augmented matrix
-        X_aug = self._build_augmented_matrix(triplets)
+        # Elementwise-weighted augmented matrix (identity weights for the
+        # orthogonal encoding)
+        X_weighted = self._weighted_design(triplets)
+        n = X_weighted.shape[0]
 
-        # Compute precision weights
-        W_precision = self._compute_precision_weights(triplets)
-
-        # Apply elementwise weighting
-        X_weighted = W_precision * X_aug
+        if sample_weights is None:
+            sample_weights = getattr(triplets, "sample_weights", None)
+        if sample_weights is None:
+            omega = np.ones(n)
+        else:
+            omega = np.asarray(sample_weights, dtype=np.float64).ravel()
+            if omega.shape[0] != n or np.any(omega < 0) or omega.sum() <= 0:
+                raise ValueError("sample_weights must be non-negative, length n")
+        self.sample_weights_ = None if sample_weights is None else omega
 
         # Handle missing data with EM if mask provided
         if missing_mask is not None:
-            X_weighted, y = self._em_imputation(X_weighted, y, missing_mask, triplets)
+            X_weighted = self._em_imputation(X_weighted, y, missing_mask, omega)
 
-        # Fit PLS via NIPALS
-        self.components_ = self._nipals_pls1(X_weighted, y, self.n_components)
+        X_c, y_c = self._center(X_weighted, y, omega)
+        sw = np.sqrt(omega)
+
+        # Fit PLS via NIPALS on the row-weighted, centered problem
+        self.components_ = self._nipals_pls1(
+            sw[:, None] * X_c, sw * y_c, self.n_components
+        )
         self.is_fitted_ = True
 
         return self
+
+    def _center(
+        self,
+        X: NDArray[np.floating],
+        y: NDArray[np.floating],
+        omega: NDArray[np.floating],
+    ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+        """Store (weighted) means and return centered X and y."""
+        if self.center:
+            wsum = omega.sum()
+            self.x_mean_ = (omega[:, None] * X).sum(axis=0) / wsum
+            self.y_mean_ = float((omega * y).sum() / wsum)
+        else:
+            self.x_mean_ = np.zeros(X.shape[1])
+            self.y_mean_ = 0.0
+        return X - self.x_mean_, y - self.y_mean_
 
     def _em_imputation(
         self,
         X_aug: NDArray[np.floating],
         y: NDArray[np.floating],
         missing_mask: NDArray[np.bool_],
-        triplets: TripletData,
-    ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
+        omega: Optional[NDArray[np.floating]] = None,
+    ) -> NDArray[np.floating]:
         """
         EM-like imputation for missing data.
 
         Iteratively:
-        1. E-step: Impute missing values using current low-rank reconstruction
-        2. M-step: Refit PLS on completed data
+        1. M-step: Fit PLS on current completed data
+        2. E-step: Impute missing values using the rank-k reconstruction
         """
-        n, p_orig = triplets.T.shape
-        p_aug = 3 * p_orig
+        n, p_aug = X_aug.shape
+        if omega is None:
+            omega = np.ones(n)
+        sw = np.sqrt(omega)
 
         # Extend mask to augmented space
         M_aug = np.hstack([missing_mask, missing_mask, missing_mask])
@@ -328,10 +394,14 @@ class PNPLS:
 
         for iteration in range(self.em_max_iter):
             # M-step: Fit PLS on current completed data
-            components = self._nipals_pls1(X_completed, y, self.n_components)
+            X_c, y_c = self._center(X_completed, y, omega)
+            components = self._nipals_pls1(
+                sw[:, None] * X_c, sw * y_c, self.n_components
+            )
 
             # E-step: Impute missing values using reconstruction
-            X_hat = components.T @ components.P.T
+            # (scores were computed on row-weighted data: undo the weights)
+            X_hat = (components.T @ components.P.T) / sw[:, None] + self.x_mean_
 
             # Update only missing entries
             X_completed = np.where(M_aug, X_aug, X_hat)
@@ -342,7 +412,7 @@ class PNPLS:
                 break
             beta_prev = components.beta.copy()
 
-        return X_completed, y
+        return X_completed
 
     def predict(
         self,
@@ -364,11 +434,26 @@ class PNPLS:
         if not self.is_fitted_:
             raise RuntimeError("Model must be fitted before predict")
 
-        X_aug = self._build_augmented_matrix(triplets)
-        W_precision = self._compute_precision_weights(triplets)
-        X_weighted = W_precision * X_aug
+        X_weighted = self._weighted_design(triplets)
+        x_mean = self.x_mean_ if self.x_mean_ is not None else 0.0
 
-        return X_weighted @ self.components_.beta
+        return (X_weighted - x_mean) @ self.components_.beta + self.y_mean_
+
+    def centered_design(
+        self,
+        triplets: TripletData,
+    ) -> NDArray[np.floating]:
+        """
+        Return the weighted, centered augmented matrix used for prediction.
+
+        ``centered_design(triplets) @ beta + y_mean_ == predict(triplets)``.
+        Attribution routines use it so that contributions sum exactly to
+        the predicted deviation from the intercept.
+        """
+        if not self.is_fitted_:
+            raise RuntimeError("Model must be fitted first")
+        x_mean = self.x_mean_ if self.x_mean_ is not None else 0.0
+        return self._weighted_design(triplets) - x_mean
 
     def get_coefficients(self) -> dict[str, NDArray[np.floating]]:
         """

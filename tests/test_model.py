@@ -191,3 +191,61 @@ class TestPNPLS:
             model1.components_.beta,
             model2.components_.beta
         )
+
+
+class TestPLS1Correctness:
+    """Regression tests: the PLS1 weights must be the PLS (not PCA) direction."""
+
+    @staticmethod
+    def _triplets(T):
+        from neutrohydro.encoder import TripletData
+        Z = np.zeros_like(T)
+        return TripletData(T=T, I=Z, F=Z, R=Z)
+
+    def test_matches_sklearn_pls(self):
+        from sklearn.cross_decomposition import PLSRegression
+
+        rng = np.random.default_rng(0)
+        X = rng.normal(size=(80, 5)) @ np.diag([5, 3, 1, 1, 1])
+        y = X[:, 4] + 0.1 * rng.normal(size=80)
+        for k in (1, 2, 3):
+            model = PNPLS(n_components=k, lambda_F=0.0).fit(self._triplets(X), y)
+            ref = PLSRegression(n_components=k, scale=False).fit(X, y)
+            np.testing.assert_allclose(
+                model.predict(self._triplets(X)), ref.predict(X).ravel(), atol=1e-8
+            )
+
+    def test_first_weight_is_covariance_direction(self):
+        rng = np.random.default_rng(1)
+        X = rng.normal(size=(60, 4)) @ np.diag([4, 2, 1, 1])
+        y = X[:, 3]
+        model = PNPLS(n_components=1, lambda_F=0.0).fit(self._triplets(X), y)
+        Xc = X - X.mean(0)
+        w = Xc.T @ (y - y.mean())
+        w /= np.linalg.norm(w)
+        w_model = model.components_.W[:4, 0]
+        assert abs(abs(w_model @ w) - 1.0) < 1e-10
+
+    def test_intercept_and_contributions_sum(self, sample_data):
+        from neutrohydro.attribution import compute_nsr, compute_sample_baseline_fraction
+        from neutrohydro.nvip import compute_nvip
+
+        X, y = sample_data
+        X_std, y = Preprocessor().fit_transform(X, y)
+        triplets = NDGEncoder(baseline_type="low_rank", baseline_rank=2).fit_transform(X_std)
+        model = PNPLS(n_components=3).fit(triplets, y)
+        sa = compute_sample_baseline_fraction(model, triplets, compute_nsr(compute_nvip(model)))
+        np.testing.assert_allclose(
+            sa.c.sum(axis=1) + model.y_mean_, model.predict(triplets), atol=1e-10
+        )
+
+    def test_sample_weights(self):
+        rng = np.random.default_rng(2)
+        X = rng.normal(size=(50, 3))
+        y = X @ np.array([1.0, -1.0, 0.5])
+        w = rng.uniform(0.2, 1.0, 50)
+        model = PNPLS(n_components=3, lambda_F=0.0).fit(self._triplets(X), y, sample_weights=w)
+        # exact linear relation: weighted fit must recover it
+        np.testing.assert_allclose(model.predict(self._triplets(X)), y, atol=1e-8)
+        with pytest.raises(ValueError):
+            PNPLS().fit(self._triplets(X), y, sample_weights=-w)

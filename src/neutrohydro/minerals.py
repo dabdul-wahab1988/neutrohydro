@@ -37,6 +37,11 @@ class MineralInversionResult:
     thermo_plausible: Optional[NDArray[np.bool_]] = None # Plausibility based on thermodynamics
     mineral_names: Optional[List[str]] = None # List of mineral names corresponding to columns of s
     water_types: Optional[List[str]] = None # Dominant water type per sample
+    # Jacobian-based uncertainty (only when `invert(..., rel_error=...)`)
+    s_std: Optional[NDArray[np.floating]] = None  # Std. error of s (0 off-support)
+    support_condition: Optional[NDArray[np.floating]] = None  # cond(D A_S) per sample
+    support_defect: Optional[NDArray[np.floating]] = None  # Orthogonality defect of D A_S
+    ion_weights: Optional[NDArray[np.floating]] = None  # Ion weights D used in the fit
 
 
 # Standard ion order (meq/L recommended)
@@ -923,6 +928,142 @@ def build_stoichiometric_matrix(
 
 
 
+def orthogonality_defect(A: NDArray[np.floating]) -> float:
+    """
+    Hadamard orthogonality defect of the columns of A.
+
+        delta(A) = sum_k log ||a_k|| - 0.5 * log det(A^T A)  >= 0
+
+    It is 0 iff the columns are mutually orthogonal (each mineral moves the
+    water composition in its own direction, so its amount is read off
+    independently) and +inf if they are linearly dependent (some mineral
+    amounts are not identifiable). It is the "IMA contrast" used for
+    identifiability of mixing Jacobians in independent mechanism analysis
+    (Gresele et al., 2021), here applied to the Jacobian dc/ds = A of the
+    forward model c = A s.
+    """
+    A = np.asarray(A, dtype=np.float64)
+    if A.ndim != 2 or A.shape[1] == 0:
+        return 0.0
+    norms = np.linalg.norm(A, axis=0)
+    if np.any(norms <= 0) or A.shape[1] > A.shape[0]:
+        return float("inf")
+    sv = np.linalg.svd(A, compute_uv=False)
+    if sv[-1] <= 1e-12 * sv[0]:
+        return float("inf")
+    return float(np.sum(np.log(norms)) - np.sum(np.log(sv)))
+
+
+def stoichiometric_identifiability(
+    A: NDArray[np.floating],
+    mineral_names: List[str],
+    ion_weights: Optional[NDArray[np.floating]] = None,
+    cos_threshold: float = 0.95,
+    vif_threshold: float = 10.0,
+) -> dict:
+    """
+    Which minerals can the inversion tell apart?
+
+    Mass balance inverts c = A s, whose Jacobian is A itself. The amounts
+    of two minerals are separable only to the extent that their (weighted)
+    stoichiometric columns point in different directions.
+
+    Parameters
+    ----------
+    A : ndarray of shape (n_ions, n_minerals)
+        Stoichiometric matrix.
+    mineral_names : list of str
+    ion_weights : ndarray of shape (n_ions,), optional
+        Row weights D used by the weighted NNLS (default: ones).
+    cos_threshold : float, default=0.95
+        |cosine| above which a pair is reported as aliased.
+    vif_threshold : float, default=10.0
+        Variance inflation factor above which a mineral is flagged.
+
+    Returns
+    -------
+    dict with
+        ``cosine`` : (K, K) cosine similarity of weighted columns
+        ``aliased_pairs`` : list of (mineral_a, mineral_b, cosine)
+        ``vif`` : (K,) variance inflation factor of each mineral given all
+            others (inf = exactly reproducible by a combination of the others,
+            e.g. Dolomite = Calcite + Magnesite)
+        ``non_identifiable`` : minerals with vif >= vif_threshold
+        ``alias_groups`` : groups of minerals with parallel columns
+            (|cos| > 1 - 1e-9). No data on these ions can separate them; the
+            NNLS solution picks one member arbitrarily, so report the group.
+        ``underdetermined`` : True if there are more minerals than the rank
+            (VIF is then infinite for every mineral in the dependent set and
+            identifiability must be judged per sample on the NNLS support,
+            see ``invert(..., rel_error=...)``)
+        ``orthogonality_defect`` : Hadamard defect of the whole matrix
+        ``condition_number`` : of the weighted matrix
+        ``rank`` : numerical rank
+    """
+    A = np.asarray(A, dtype=np.float64)
+    D = np.ones(A.shape[0]) if ion_weights is None else np.asarray(ion_weights, float)
+    Aw = D[:, None] * A
+    norms = np.linalg.norm(Aw, axis=0)
+    An = Aw / np.where(norms > 0, norms, 1.0)
+    K = A.shape[1]
+
+    cosine = An.T @ An
+    pairs = []
+    for a in range(K):
+        for b in range(a + 1, K):
+            if abs(cosine[a, b]) >= cos_threshold:
+                pairs.append((mineral_names[a], mineral_names[b], float(cosine[a, b])))
+    pairs.sort(key=lambda t: -abs(t[2]))
+
+    vif = np.full(K, np.inf)
+    for k in range(K):
+        if norms[k] <= 0:
+            continue
+        others = np.delete(An, k, axis=1)
+        if others.shape[1] == 0:
+            vif[k] = 1.0
+            continue
+        coef, *_ = np.linalg.lstsq(others, An[:, k], rcond=None)
+        resid = An[:, k] - others @ coef
+        r2 = 1.0 - float(resid @ resid)  # columns have unit norm
+        vif[k] = np.inf if r2 >= 1.0 - 1e-10 else 1.0 / (1.0 - r2)
+
+    # Exact aliases: connected components of the "parallel columns" graph
+    parent = list(range(K))
+
+    def _find(a: int) -> int:
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    for a in range(K):
+        for b in range(a + 1, K):
+            if norms[a] > 0 and norms[b] > 0 and abs(cosine[a, b]) > 1.0 - 1e-9:
+                parent[_find(a)] = _find(b)
+    groups: dict = {}
+    for k in range(K):
+        groups.setdefault(_find(k), []).append(mineral_names[k])
+    alias_groups = [g for g in groups.values() if len(g) > 1]
+
+    sv = np.linalg.svd(Aw, compute_uv=False) if K else np.array([0.0])
+    rank = int(np.sum(sv > 1e-10 * max(sv[0], 1e-300)))
+    cond = float(sv[0] / sv[rank - 1]) if rank > 0 else float("inf")
+
+    return {
+        "cosine": cosine,
+        "aliased_pairs": pairs,
+        "vif": vif,
+        "non_identifiable": [mineral_names[k] for k in range(K) if vif[k] >= vif_threshold],
+        "alias_groups": alias_groups,
+        "underdetermined": K > rank,
+        "orthogonality_defect": orthogonality_defect(Aw),
+        "condition_number": cond if rank == min(Aw.shape) else float("inf"),
+        "rank": rank,
+        "mineral_names": list(mineral_names),
+    }
+
+
 class MineralInverter:
     """
     Weighted NNLS-based mineral stoichiometric inverter.
@@ -1015,7 +1156,9 @@ class MineralInverter:
         pH: Optional[NDArray[np.floating]] = None,
         Eh: Optional[NDArray[np.floating]] = None,
         temp: float = 25.0,
-        si_threshold: float = 0.5
+        si_threshold: float = 0.5,
+        rel_error: Optional[float] = None,
+        abs_error: float = 0.0,
     ) -> MineralInversionResult:
         """
         Perform weighted NNLS inversion for mineral contributions.
@@ -1048,6 +1191,17 @@ class MineralInverter:
         si_threshold : float
             SI threshold for thermodynamic plausibility. Minerals with SI > threshold
             are considered supersaturated and implausible for dissolution.
+        rel_error : float, optional
+            Relative analytical error of the ion concentrations (e.g. 0.05).
+            If given, standard errors of the mineral amounts are propagated
+            through the Jacobian of the inversion on each sample's support
+            S = {k : s_k > 0}:  ds_S/dc = (D A_S)^+ D, so
+            Cov(s_S) = J diag(sigma_c^2) J^T with
+            sigma_c = rel_error * |c| + abs_error. The linearisation holds
+            while the NNLS support is stable. Results go to ``s_std``,
+            ``support_condition`` and ``support_defect``.
+        abs_error : float, default=0.0
+            Absolute analytical error floor (same units as c).
 
         Returns
         -------
@@ -1154,6 +1308,11 @@ class MineralInverter:
         s = np.zeros((n, self.n_minerals))
         residuals = np.zeros((n, m))
         residual_norms = np.zeros(n)
+        propagate = rel_error is not None
+        if propagate:
+            s_std = np.zeros((n, self.n_minerals))
+            support_condition = np.ones(n)
+            support_defect = np.zeros(n)
 
         for i in range(n):
             c_weighted = D * c[i, :]
@@ -1237,6 +1396,20 @@ class MineralInverter:
             
             s[i, :] = s_i
 
+            if propagate:
+                support = [k for k, v in zip(active_indices, s_active) if v > 1e-12]
+                if support:
+                    A_S = A_i[:, support]  # already weighted by D
+                    J = np.linalg.pinv(A_S) * D[np.newaxis, :]  # ds_S / dc
+                    sigma_c = rel_error * np.abs(c[i, :]) + abs_error
+                    cov = (J * sigma_c[np.newaxis, :] ** 2) @ J.T
+                    s_std[i, support] = np.sqrt(np.clip(np.diag(cov), 0.0, None))
+                    sv = np.linalg.svd(A_S, compute_uv=False)
+                    support_condition[i] = (
+                        float(sv[0] / sv[-1]) if sv[-1] > 1e-12 * sv[0] else np.inf
+                    )
+                    support_defect[i] = orthogonality_defect(A_S)
+
             # Compute residual in original space
             residual = c[i, :] - self.A @ s_i
             residuals[i, :] = residual
@@ -1314,7 +1487,30 @@ class MineralInverter:
             water_types=water_types,
             pollution_indices=pollution_indices,
             redox_state=redox_states,
-            salinity_indices=salinity_indices
+            salinity_indices=salinity_indices,
+            s_std=s_std if propagate else None,
+            support_condition=support_condition if propagate else None,
+            support_defect=support_defect if propagate else None,
+            ion_weights=D,
+        )
+
+    def identifiability(
+        self,
+        pi_G: Optional[NDArray[np.floating]] = None,
+        cos_threshold: float = 0.95,
+        vif_threshold: float = 10.0,
+    ) -> dict:
+        """
+        Identifiability report for this inverter's mineral library.
+
+        See :func:`stoichiometric_identifiability`. With ``pi_G`` the same
+        ion weights as :meth:`invert` are used.
+        """
+        D = None
+        if pi_G is not None and len(pi_G) == self.n_ions:
+            D = self._compute_weights(np.asarray(pi_G, dtype=np.float64))
+        return stoichiometric_identifiability(
+            self.A, self.mineral_names, D, cos_threshold, vif_threshold
         )
 
     def get_stoichiometry_dataframe(self):

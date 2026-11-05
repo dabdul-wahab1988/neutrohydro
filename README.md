@@ -30,6 +30,29 @@ NeutroHydro implements the **Neutralization-Displacement Geosystem (NDG) theory 
   - Standard mineral library included
   - Custom mineral definitions supported
   - **Universal Framework**: Includes Redox, Pollution, and Salinity modules
+  - **Identifiability & error bars**: aliased minerals (e.g. Gypsum ≡ Anhydrite) are
+    reported, and analytical error is propagated through the inversion Jacobian
+
+- **Jacobian-Orthogonal Encoding** (`baseline_type="orthogonal"`): the T, I and F channels
+  respond to mutually orthogonal directions of ion space, which gives:
+  - an exact split of R² into baseline + indeterminate + perturbation parts
+  - an exact per-ion π_G, with predictions identical to plain PLS (the encoding
+    cannot manufacture fit)
+  - process alignment: which minerals or end-members lie in the baseline or
+    perturbation subspace
+  - see [docs/jacobian_orthogonality.md](docs/jacobian_orthogonality.md)
+
+> **Results change in this version.** The PLS1 weight update previously ran a power
+> iteration that converged to the first principal component, so the model was principal
+> component regression rather than PLS. Several other issues were also fixed:
+>
+> - PLS now centers the data and fits an intercept.
+> - `transform` re-estimated the baseline on every new batch.
+> - The default I channel depended on row order.
+> - The robust PCA baseline was stopped before it converged.
+>
+> R², VIP and π_G from earlier versions should be recomputed. Details are in
+> [docs/mathematical_critique.md](docs/mathematical_critique.md).
 
 ## Installation
 
@@ -139,6 +162,33 @@ print(result.mineral_fractions)  # Normalized contributions
 print(result.plausible)          # Plausibility mask
 ```
 
+### Jacobian-Orthogonal Mode (exact attribution)
+
+```python
+from neutrohydro import NeutroHydroPipeline
+from neutrohydro.pipeline import PipelineConfig
+
+config = PipelineConfig(
+    baseline_type="orthogonal",
+    baseline_rank=None,        # None: chosen by bootstrap parallel analysis
+    log_transform=True,
+    n_components=3,
+)
+results = NeutroHydroPipeline(config).fit(X, y, feature_names=ion_names)
+
+ortho = results.orthogonal
+print(ortho.R2, ortho.R2_channels)        # R2 = R2_T + R2_I + R2_F (exact)
+print(ortho.ions_dataframe())             # per-ion exact shares pi_T, pi_I, pi_F
+print(ortho.samples_dataframe().head())   # per-sample (tau, iota, phi), sum to 1
+```
+
+```bash
+neutrohydro run data.csv --target TDS --baseline orthogonal
+```
+
+See `examples/jacobian_orthogonality_demo.py` for process alignment, scenario analysis
+and mineral error bars on the bundled `data.csv`.
+
 ### Configuration Options
 
 ```python
@@ -198,6 +248,112 @@ where $E_T = VIP_T^2$ and $E_P = VIP_I^2 + VIP_F^2$.
 pip install -e .[dev]
 pytest tests/ -v
 ```
+# NeutroHydro Documentation
+
+## Neutrosophic Chemometrics for Groundwater Analysis
+
+## Table of Contents
+
+### Getting Started
+
+- [Quick Start Guide](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quickstart.md)
+- [Installation](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/installation.md)
+
+### Mathematical Foundations
+
+- [Mathematical Framework Overview](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/mathematical_framework.md)
+- [Preprocessing & Robust Scaling](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/preprocessing.md)
+- [NDG Encoder: Neutrosophic Triplets](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/encoder.md)
+- [PNPLS: Probabilistic Neutrosophic PLS](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/model.md)
+- [NVIP: Variable Importance Decomposition](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/nvip.md)
+- [Attribution: NSR and Baseline Fractions](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/attribution.md)
+- [Mineral Stoichiometric Inversion](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/minerals.md)
+- [Water Quality Assessment](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/quality_check.md)
+- [Model Limitations & Validity](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/limitations.md)
+- [Hydrogeochemical Processes](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/hydrogeochemical_processes.md): Mixing, Exchange, Redox
+- [Mathematical Critique](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/mathematical_critique.md): Rigorous review of potential issues
+- [Final Critical Review](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/final_critical_review.md): "Red Team" analysis of validity
+
+### API Reference
+
+- [Pipeline API](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/api_pipeline.md)
+- [Core Modules API](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/api_modules.md)
+
+### Examples & Tutorials
+
+- [Basic Usage Example](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/examples_basic.md)
+- [Advanced Workflows](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/examples_advanced.md)
+- [Interpreting Results](https://github.com/dabdul-wahab1988/neutrohydro/blob/main/docs/interpreting_results.md)
+
+## Overview
+
+NeutroHydro implements a mathematically well-posed workflow for groundwater chemometrics in **absolute concentration space** (non-compositional):
+
+```text
+Raw Ion Data
+     ↓
+Preprocessing (Robust centering/scaling)
+     ↓
+NDG Encoder (T, I, F triplets)
+     ↓
+PNPLS Regression (Augmented Hilbert space)
+     ↓
+NVIP (Channel-wise variable importance)
+     ↓
+NSR/π_G (Baseline vs perturbation attribution)
+     ↓
+Mineral Inference (Stoichiometric inversion)
+```
+
+## Core Mathematical Innovations
+
+### 1. Neutrosophic Data Representation
+
+Maps each ion concentration to a triplet **(T, I, F)**:
+
+- **T (Truth)**: Baseline/reference component
+- **I (Indeterminacy)**: Uncertainty/ambiguity
+- **F (Falsity)**: Perturbation likelihood
+
+### 2. L2-Additive VIP Decomposition
+
+**Identity**: Variable importance decomposes additively across channels:
+
+$$VIP_{agg}^2(j) = VIP_T^2(j) + VIP_I^2(j) + VIP_F^2(j)$$
+
+This identity holds by construction, since squared weights add over a partition. It
+makes attribution *unambiguous* only when the channels do not overlap, that is, when
+their Jacobians are orthogonal. With the legacy encoder they overlap (measured
+entanglement 0.5–0.65 on `data.csv`), so the T/I/F split is not unique. Use
+`baseline_type="orthogonal"` for an attribution that is exact and unique
+([docs/jacobian_orthogonality.md](docs/jacobian_orthogonality.md)).
+
+### 3. Non-Compositional Framework
+
+Unlike compositional data analysis (CoDa), NeutroHydro operates in **absolute concentration space**, preserving:
+
+- Physical interpretability
+- Additive mixing models
+- Direct stoichiometric constraints
+
+### 4. Hybrid Geochemical-Statistical Engine
+
+Combines rigorous mathematical optimization with expert hydrogeochemical heuristics:
+
+- **Context-Aware Inversion**: Uses **WHO Quality Flags** and **Gibbs Diagrams** to dynamically constrain the mineral solver.
+- **Redox Detection**: Explicitly solves for mass loss (e.g., Denitrification) using negative stoichiometry.
+- **Advanced Indices**: Integrated **Simpson's Ratio** (Standard & Inverse) for precise salinity diagnosis (Seawater vs. Recharge).
+
+**For Developers:**
+
+- Contributing? → See `CONTRIBUTING.md` in repo root
+- Testing? → See `tests/` directory
+
+
+
+## License
+
+MIT License - see LICENSE file for details.
 
 ## License
 

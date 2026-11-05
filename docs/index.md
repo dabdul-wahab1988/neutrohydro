@@ -14,6 +14,7 @@
 - [Mathematical Framework Overview](mathematical_framework.md)
 - [Preprocessing & Robust Scaling](preprocessing.md)
 - [NDG Encoder: Neutrosophic Triplets](encoder.md)
+- [Jacobian Orthogonality: Exact Attribution](jacobian_orthogonality.md): orthogonal T/I/F encoding, exact $R^2$ split, process alignment, mineral identifiability
 - [PNPLS: Probabilistic Neutrosophic PLS](model.md)
 - [NVIP: Variable Importance Decomposition](nvip.md)
 - [Attribution: NSR and Baseline Fractions](attribution.md)

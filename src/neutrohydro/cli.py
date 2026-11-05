@@ -76,15 +76,28 @@ def create_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--baseline",
         type=str,
-        choices=["robust_pca", "low_rank", "hydrofacies"],
+        choices=["robust_pca", "low_rank", "hydrofacies", "median", "orthogonal"],
         default="robust_pca",
-        help="Baseline type for NDG encoder (default: robust_pca)",
+        help=(
+            "Baseline type for NDG encoder (default: robust_pca). "
+            "'orthogonal' uses the Jacobian-orthogonal encoding with exact "
+            "baseline/perturbation attribution."
+        ),
     )
     run_parser.add_argument(
         "--baseline-rank",
         type=int,
-        default=2,
-        help="Rank for low-rank baseline methods (default: 2)",
+        default=None,
+        help=(
+            "Rank for low-rank baseline methods (default: 2; for "
+            "'orthogonal', default: selected by bootstrap parallel analysis)"
+        ),
+    )
+    run_parser.add_argument(
+        "--indeterminacy-rank",
+        type=int,
+        default=None,
+        help="Orthogonal encoding: size of the indeterminate band (default: auto)",
     )
     run_parser.add_argument(
         "--rho-i",
@@ -218,11 +231,16 @@ def run_command(args) -> int:
         print("Error: NaN values in target column", file=sys.stderr)
         return 1
 
+    baseline_rank = args.baseline_rank
+    if baseline_rank is None and args.baseline in ("low_rank", "robust_pca"):
+        baseline_rank = 2
+
     # Create config
     config = PipelineConfig(
         log_transform=args.log_transform,
         baseline_type=args.baseline,
-        baseline_rank=args.baseline_rank,
+        baseline_rank=baseline_rank,
+        indeterminacy_rank=args.indeterminacy_rank,
         n_components=args.n_components,
         rho_I=args.rho_i,
         rho_F=args.rho_f,
@@ -288,6 +306,18 @@ def run_command(args) -> int:
     print(f"\nModel Performance:")
     print(f"  R2 (train): {results.r2_train:.4f}")
     print(f"  Components: {results.model.components_.n_components}")
+
+    if results.orthogonal is not None:
+        basis = results.encoder.basis_
+        ortho = results.orthogonal
+        print(f"\nJacobian-orthogonal encoding:")
+        print(f"  Subspace ranks: T={basis.rank_T}, I={basis.rank_I}, "
+              f"F={len(basis.eigenvalues) - basis.rank_T - basis.rank_I}")
+        if ortho.R2_channels is not None:
+            r2t, r2i, r2f = ortho.R2_channels
+            print(f"  Exact R2 split (weighted R2 = {ortho.R2:.4f}):")
+            print(f"    baseline T: {r2t:.4f}  indeterminate I: {r2i:.4f}  "
+                  f"perturbation F: {r2f:.4f}")
 
     print(f"\nVariable Importance (VIP_agg):")
     for j, (name, vip) in enumerate(zip(feature_names, results.nvip.VIP_agg)):

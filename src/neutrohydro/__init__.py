@@ -7,6 +7,8 @@ This package implements:
 - NVIP: Neutrosophic Variable Importance in Projection with L2 decomposition
 - NSR/pi_G: Baseline vs perturbation attribution metrics
 - Stoichiometric mineral inference via weighted NNLS
+- Jacobian-orthogonal encoding with exact baseline/perturbation attribution
+  (neutrohydro.orthogonal)
 """
 
 from neutrohydro.preprocessing import Preprocessor
@@ -16,6 +18,15 @@ from neutrohydro.nvip import compute_nvip, NVIPResult
 from neutrohydro.attribution import compute_nsr, compute_sample_baseline_fraction
 from neutrohydro.minerals import MineralInverter, STANDARD_MINERALS
 from neutrohydro.pipeline import NeutroHydroPipeline
+from neutrohydro.orthogonal import (
+    OrthogonalNDGEncoder,
+    OrthogonalAttribution,
+    orthogonal_attribution,
+    subspace_alignment,
+    jacobian_entanglement,
+    verify_jacobian_orthogonality,
+)
+from neutrohydro.minerals import stoichiometric_identifiability
 
 _VIZ_IMPORT_ERROR: Exception | None = None
 
@@ -32,6 +43,10 @@ try:
         classify_water_type,
         create_figure,
         PRESETS,
+        plot_neutrosophic_ternary,
+        plot_exact_r2_split,
+        plot_ion_channel_shares,
+        plot_process_alignment,
     )
 except Exception as exc:  # optional deps: matplotlib/seaborn
     _VIZ_IMPORT_ERROR = exc
@@ -53,6 +68,10 @@ except Exception as exc:  # optional deps: matplotlib/seaborn
     classify_water_type = _viz_unavailable
     create_figure = _viz_unavailable
     PRESETS = {}
+    plot_neutrosophic_ternary = _viz_unavailable
+    plot_exact_r2_split = _viz_unavailable
+    plot_ion_channel_shares = _viz_unavailable
+    plot_process_alignment = _viz_unavailable
 
 __version__ = "1.0.0"
 __author__ = "Dickson Abdul-Wahab"
@@ -65,10 +84,17 @@ __all__ = [
     "PNPLS",
     "NeutroHydroPipeline",
     "MineralInverter",
+    "OrthogonalNDGEncoder",
+    "OrthogonalAttribution",
     # Functions
     "compute_nvip",
     "compute_nsr",
     "compute_sample_baseline_fraction",
+    "orthogonal_attribution",
+    "subspace_alignment",
+    "jacobian_entanglement",
+    "verify_jacobian_orthogonality",
+    "stoichiometric_identifiability",
     # Visualization
     "plot_gibbs",
     "plot_ilr_classification",
@@ -81,6 +107,10 @@ __all__ = [
     "classify_water_type",
     "create_figure",
     "PRESETS",
+    "plot_neutrosophic_ternary",
+    "plot_exact_r2_split",
+    "plot_ion_channel_shares",
+    "plot_process_alignment",
     # Data structures
     "NVIPResult",
     "STANDARD_MINERALS",

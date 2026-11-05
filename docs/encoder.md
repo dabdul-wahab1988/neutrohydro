@@ -50,6 +50,14 @@ $$(X_T)_{ij} = \text{median}_{i'}(X^{(\text{std})}_{i'j})$$
 
 **When to use**: Default choice for most applications.
 
+> **Caution.** The median baseline is the same vector for every sample, so the $T$ channel
+> is constant: it carries no sample-to-sample information and cannot explain variation in
+> the target. After centering in PNPLS its columns are zero and $\pi_G = 0$ for every ion.
+> The falsity map also uses $|R|$, so enrichment and depletion of an ion give the same
+> $F$; only the magnitude of the deviation is kept. Use a low-rank baseline, or
+> `baseline_type="orthogonal"` (signed components, see
+> [Jacobian Orthogonality](jacobian_orthogonality.md)), when baseline attribution matters.
+
 #### Option 2: Hydrofacies-Conditioned Median
 
 $$(X_T)_{ij} = \text{median}_{i': g(i')=g(i)}(X^{(\text{std})}_{i'j})$$
@@ -192,7 +200,12 @@ Capture **ambiguity** not purely due to residual magnitude:
 
 #### Method 1: Local Heterogeneity (Default)
 
-For spatial/temporal data with neighborhood structure:
+Implementation: $\mathcal{N}(i)$ is the set of the `n_neighbors` (default 5) nearest
+**training** samples to $x_i$ in standardized ion space (`indeterminacy="knn"`), so the
+channel does not depend on row order and applies unchanged to new samples. The older
+rolling window over row order is available as `indeterminacy="rolling"`. Use it only
+when rows have a meaningful order (a time series or a transect). For unordered samples
+it makes results depend on how the input file is sorted.
 
 $$I_{ij} = 1 - \exp\left(-\frac{\text{Var}(\mathcal{N}(i), j)}{\tau_j + \delta}\right)$$
 
@@ -276,7 +289,8 @@ The encoder **must guarantee**:
 **Output**: Encoder parameters $\theta = (\sigma, \text{metadata})$
 
 ```
-1. Compute baseline: X_T ← B(X_std)
+1. Compute baseline: X_T ← B_θ(X_std)   # the *fitted* operator: stored medians,
+                                        # or projection onto the fitted subspace
 2. Compute residuals: R ← X_std - X_T
 3. Compute robust scales:
      For j = 1, ..., p:
@@ -292,7 +306,8 @@ The encoder **must guarantee**:
 **Output**: Triplets $(X_T, X_I, X_F)$ and residuals $R$
 
 ```
-1. Compute baseline: X_T ← B(X_std)
+1. Compute baseline: X_T ← B_θ(X_std)   # the *fitted* operator: stored medians,
+                                        # or projection onto the fitted subspace
 2. Compute residuals: R ← X_std - X_T
 3. Compute falsity:
      u ← |R| / (σ + δ)
@@ -305,6 +320,14 @@ The encoder **must guarantee**:
 5. Clip to bounds: I ← clip(I, 0, 1), F ← clip(F, 0, 1)
 6. Return (X_T, X_I, X_F, R)
 ```
+
+The baseline is not re-estimated on the data passed to `transform`. Earlier versions
+recomputed medians or the SVD of each new batch, so a new sample's encoding depended on
+the other samples in its batch, and a uniformly shifted batch looked unperturbed. For
+robust PCA, new samples are robustly projected onto the fitted subspace, minimising
+$\tfrac12\|x - Vt - s\|^2 + \lambda\|s\|_1$ with $V$ fixed. The training RPCA
+decomposition is a fixed point of this problem; the iteration cap was raised from 100 to
+1000 because typical tables need 100–300 iterations to converge.
 
 ## Properties
 
@@ -410,6 +433,15 @@ $(T, I, F)$ are **conceptually independent**:
 - $T$ captures baseline
 - $I$ captures uncertainty (may be independent of baseline)
 - $F$ captures perturbations (derived from $R = X^{(\text{std})} - T$)
+
+Conceptual independence is not functional independence. All three channels are functions
+of the same $x$, and the elementwise precision weights $e^{-\lambda_F F}$ multiply $T$ by
+a function of $F$. The input directions the channels respond to therefore overlap: their
+Jacobians are not orthogonal. Measured with `neutrohydro.orthogonal.jacobian_entanglement`
+on `data.csv`, the overlap of the model's effective channels is 0.5–0.65 on a 0–1 scale.
+When the channels overlap, the split of importance between them is not unique. The
+**Jacobian-orthogonal encoder** (`baseline_type="orthogonal"`) makes the channels exactly
+non-overlapping; see [Jacobian Orthogonality](jacobian_orthogonality.md).
 
 ## Hyperparameter Selection
 
