@@ -43,6 +43,10 @@ try:
         classify_water_type,
         create_figure,
         PRESETS,
+        plot_neutrosophic_ternary,
+        plot_exact_r2_split,
+        plot_ion_channel_shares,
+        plot_process_alignment,
     )
 except Exception as exc:  # optional deps: matplotlib/seaborn
     _VIZ_IMPORT_ERROR = exc
@@ -64,6 +68,10 @@ except Exception as exc:  # optional deps: matplotlib/seaborn
     classify_water_type = _viz_unavailable
     create_figure = _viz_unavailable
     PRESETS = {}
+    plot_neutrosophic_ternary = _viz_unavailable
+    plot_exact_r2_split = _viz_unavailable
+    plot_ion_channel_shares = _viz_unavailable
+    plot_process_alignment = _viz_unavailable
 
 __version__ = "1.0.0"
 __author__ = "Dickson Abdul-Wahab"
@@ -99,6 +107,10 @@ __all__ = [
     "classify_water_type",
     "create_figure",
     "PRESETS",
+    "plot_neutrosophic_ternary",
+    "plot_exact_r2_split",
+    "plot_ion_channel_shares",
+    "plot_process_alignment",
     # Data structures
     "NVIPResult",
     "STANDARD_MINERALS",

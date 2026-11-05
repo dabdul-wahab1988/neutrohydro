@@ -1401,3 +1401,464 @@ def generate_report(
         print("  [OK] vip_decomposition.png")
     
     print(f"\n[OK] Report complete! All plots saved to {output_dir}/")
+
+
+# =============================================================================
+# JACOBIAN-ORTHOGONAL ATTRIBUTION PLOTS
+# =============================================================================
+#
+# One fixed channel -> color mapping for every orthogonal-attribution plot
+# (first three slots of the validated reference categorical palette; all
+# pairs pass the CVD and normal-vision floors). The aqua I slot sits below 3:1
+# contrast on white, so every plot carries a legend and/or direct labels.
+
+CHANNEL_COLORS = {
+    'T': '#2a78d6',  # baseline (blue)
+    'F': '#eb6834',  # perturbation (orange)
+    'I': '#1baf7a',  # indeterminate (aqua)
+}
+CHANNEL_LABELS = {
+    'T': 'T (baseline)',
+    'I': 'I (indeterminate)',
+    'F': 'F (perturbation)',
+}
+_UNEXPLAINED_COLOR = '#d6d5d0'   # neutral gray for "not explained"
+_TEXT_PRIMARY = '#0b0b0b'
+_TEXT_SECONDARY = '#52514e'
+_TEXT_MUTED = '#8a8984'
+_SURFACE = '#ffffff'
+
+
+def _pretty_ion(name: str) -> str:
+    """Typeset an ion name ('Ca2+', 'HCO3-', 'Ca') with ION_MAP when possible."""
+    if name in ION_MAP:
+        return ION_MAP[name]
+    for suffix in ('2+', '2-', '+', '-'):
+        if name.endswith(suffix) and name[:-len(suffix)] in ION_MAP:
+            return ION_MAP[name[:-len(suffix)]]
+    return name
+
+
+def _get_axes(ax, figsize):
+    """Return (fig, ax, own_figure)."""
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        return fig, ax, True
+    return ax.figure, ax, False
+
+
+def _finish(fig, output_path: Optional[str], own_figure: bool):
+    """Shared save/close convention of this module."""
+    if own_figure:
+        fig.tight_layout()
+    if output_path:
+        os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else '.', exist_ok=True)
+        fig.savefig(output_path, dpi=300, bbox_inches='tight')
+        if own_figure:
+            plt.close(fig)
+    return fig
+
+
+def _recessive_axes(ax, grid_axis: str = 'x') -> None:
+    """Thin, quiet axes: no top/right spines, light grid on one axis."""
+    for side in ('top', 'right'):
+        ax.spines[side].set_visible(False)
+    for side in ('left', 'bottom'):
+        ax.spines[side].set_color(_TEXT_MUTED)
+        ax.spines[side].set_linewidth(0.8)
+    ax.tick_params(colors=_TEXT_SECONDARY, length=3)
+    ax.grid(False)
+    if grid_axis:
+        ax.grid(True, axis=grid_axis, color='#e4e3df', linewidth=0.8)
+        ax.set_axisbelow(True)
+
+
+def _ternary_xy(tau, iota, phi):
+    """Barycentric (T bottom-left, F bottom-right, I top) -> Cartesian."""
+    tau = np.asarray(tau, dtype=float)
+    iota = np.asarray(iota, dtype=float)
+    phi = np.asarray(phi, dtype=float)
+    total = tau + iota + phi
+    total = np.where(total > 0, total, 1.0)
+    iota_n, phi_n = iota / total, phi / total
+    return phi_n + 0.5 * iota_n, (np.sqrt(3) / 2) * iota_n
+
+
+def plot_neutrosophic_ternary(
+    attribution=None,
+    tau: Optional[np.ndarray] = None,
+    iota: Optional[np.ndarray] = None,
+    phi: Optional[np.ndarray] = None,
+    labels: Optional[List[str]] = None,
+    color_by: Optional[np.ndarray] = None,
+    color_label: str = '',
+    max_labels: int = 15,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    title: Optional[str] = 'Neutrosophic memberships per sample',
+    output_path: Optional[str] = None,
+) -> matplotlib.figure.Figure:
+    """
+    Ternary diagram of per-sample neutrosophic memberships (tau, iota, phi).
+
+    With the Jacobian-orthogonal encoding these are the exact energy
+    fractions of each sample's deviation from the center lying in the
+    baseline (T), indeterminate (I) and perturbation (F) subspaces, so
+    they sum to 1 and every sample is a point in the triangle. Corners:
+    T bottom-left, F bottom-right, I top; the horizontal position reads
+    baseline -> perturbation.
+
+    Parameters
+    ----------
+    attribution : OrthogonalAttribution, optional
+        Source of ``tau``, ``iota``, ``phi`` (ignored for any of them
+        passed explicitly).
+    tau, iota, phi : array-like of shape (n,), optional
+        Memberships (normalised to sum to 1 if they do not already).
+    labels : list of str, optional
+        Sample labels; the ``max_labels`` most perturbed samples (largest
+        phi) are annotated.
+    color_by : array-like of shape (n,), optional
+        Numeric values (e.g. TDS, depth) shown with a single-hue sequential
+        colormap and colorbar. By default points are colored by their
+        dominant channel.
+    color_label : str
+        Colorbar label when ``color_by`` is given.
+    max_labels : int, default=15
+        Maximum number of annotated samples.
+    ax : matplotlib Axes, optional
+        Axes to draw on (a new figure is created otherwise).
+    title : str, optional
+    output_path : str, optional
+        Path to save the figure.
+
+    Returns
+    -------
+    fig : matplotlib Figure
+    """
+    apply_publication_style()
+
+    if attribution is not None:
+        tau = attribution.tau if tau is None else tau
+        iota = attribution.iota if iota is None else iota
+        phi = attribution.phi if phi is None else phi
+    if tau is None or iota is None or phi is None:
+        raise ValueError("Provide an OrthogonalAttribution or tau, iota and phi")
+    tau = np.asarray(tau, dtype=float)
+    iota = np.asarray(iota, dtype=float)
+    phi = np.asarray(phi, dtype=float)
+    if not (tau.shape == iota.shape == phi.shape):
+        raise ValueError("tau, iota and phi must have the same shape")
+
+    fig, ax, own = _get_axes(ax, (7.6, 6.4))
+    h = np.sqrt(3) / 2
+
+    # Gridlines at 0.2 steps for each membership, with tick labels on the edge
+    # each membership is read from: phi (bottom), iota (right), tau (left)
+    tick = dict(fontsize=8, color=_TEXT_MUTED)
+    for v in (0.2, 0.4, 0.6, 0.8):
+        for a, b in (
+            ((v, 1 - v, 0.0), (v, 0.0, 1 - v)),   # tau = v
+            ((1 - v, v, 0.0), (0.0, v, 1 - v)),   # iota = v
+            ((1 - v, 0.0, v), (0.0, 1 - v, v)),   # phi = v
+        ):
+            x, y = _ternary_xy([a[0], b[0]], [a[1], b[1]], [a[2], b[2]])
+            ax.plot(x, y, color='#e4e3df', linewidth=0.8, zorder=1)
+        x, y = _ternary_xy(1 - v, 0.0, v)
+        ax.text(x, y - 0.03, f'{v:.1f}', ha='center', va='top', **tick)
+        x, y = _ternary_xy(0.0, v, 1 - v)
+        ax.text(x + 0.025, y, f'{v:.1f}', ha='left', va='center', **tick)
+        x, y = _ternary_xy(v, 1 - v, 0.0)
+        ax.text(x - 0.025, y, f'{v:.1f}', ha='right', va='center', **tick)
+
+    # Triangle outline
+    ax.plot([0, 1, 0.5, 0], [0, 0, h, 0], color=_TEXT_SECONDARY, linewidth=1.0, zorder=2)
+
+    # Corner labels (inside the axes limits so nothing overflows)
+    corner = dict(fontsize=11, color=_TEXT_PRIMARY)
+    ax.text(-0.03, -0.03, CHANNEL_LABELS['T'], ha='right', va='top', **corner)
+    ax.text(1.03, -0.03, CHANNEL_LABELS['F'], ha='left', va='top', **corner)
+    ax.text(0.5, h + 0.04, CHANNEL_LABELS['I'], ha='center', va='bottom', **corner)
+
+    # Edge titles: which membership the tick labels on each edge measure
+    edge = dict(fontsize=9, color=_TEXT_SECONDARY, ha='center', va='center')
+    ax.text(0.5, -0.13, r'$\phi$  perturbation share $\rightarrow$', **edge)
+    ax.text(0.25 - 0.13 * np.cos(np.pi / 6), h / 2 + 0.13 * 0.5,
+            r'$\leftarrow$ $\tau$  baseline share', rotation=60, **edge)
+    ax.text(0.75 + 0.13 * np.cos(np.pi / 6), h / 2 + 0.13 * 0.5,
+            r'$\iota$  indeterminate share $\rightarrow$', rotation=-60, **edge)
+
+    xs, ys = _ternary_xy(tau, iota, phi)
+    marker = dict(s=56, edgecolors=_SURFACE, linewidths=1.2, zorder=3)
+    if color_by is not None:
+        from matplotlib.colors import LinearSegmentedColormap
+
+        values = np.asarray(color_by, dtype=float)
+        if values.shape != tau.shape:
+            raise ValueError("color_by must have one value per sample")
+        # Single-hue sequential ramp, truncated so the lowest values do not
+        # vanish into the white surface
+        cmap = LinearSegmentedColormap.from_list(
+            'blues_truncated', plt.get_cmap('Blues')(np.linspace(0.3, 1.0, 256))
+        )
+        sc = ax.scatter(xs, ys, c=values, cmap=cmap, **marker)
+        cbar = fig.colorbar(sc, ax=ax, fraction=0.035, pad=0.02, shrink=0.8)
+        cbar.set_label(color_label, color=_TEXT_SECONDARY)
+        cbar.outline.set_visible(False)
+        cbar.ax.tick_params(colors=_TEXT_SECONDARY, length=2)
+    else:
+        dominant = np.argmax(np.column_stack([tau, iota, phi]), axis=1)
+        for k, ch in enumerate(('T', 'I', 'F')):
+            mask = dominant == k
+            ax.scatter(xs[mask], ys[mask], color=CHANNEL_COLORS[ch],
+                       label=f'dominant {ch} (n={int(mask.sum())})', **marker)
+        ax.legend(loc='upper left', frameon=False, fontsize=9, title='Samples',
+                  title_fontsize=9)
+
+    if labels is not None:
+        labels = list(labels)
+        if len(labels) != len(tau):
+            raise ValueError("labels must have one entry per sample")
+        order = np.argsort(-phi)[:max(0, max_labels)]
+        # cycle label positions around the point to reduce collisions
+        offsets = ((6, 5), (-6, 5), (6, -11), (-6, -11))
+        for rank, i in enumerate(order):
+            dx, dy = offsets[rank % len(offsets)]
+            ax.annotate(str(labels[i]), (xs[i], ys[i]), xytext=(dx, dy), textcoords='offset points',
+                        ha='left' if dx > 0 else 'right', fontsize=8, color=_TEXT_SECONDARY,
+                        zorder=4)
+
+    ax.set_xlim(-0.48, 1.48)
+    ax.set_ylim(-0.2, h + 0.14)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    if title:
+        ax.set_title(title, fontsize=12, color=_TEXT_PRIMARY)
+
+    return _finish(fig, output_path, own)
+
+
+def plot_exact_r2_split(
+    attribution,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    title: Optional[str] = None,
+    output_path: Optional[str] = None,
+) -> matplotlib.figure.Figure:
+    """
+    Single stacked bar of the exact R^2 split R^2 = R^2_T + R^2_I + R^2_F.
+
+    The unexplained remainder 1 - R^2 is shown in neutral gray. With the
+    Jacobian-orthogonal encoding the channel predictions are mutually
+    orthogonal, so the three parts add up to R^2 exactly (no interaction
+    term and no order dependence).
+
+    Parameters
+    ----------
+    attribution : OrthogonalAttribution
+        Must have been computed with the target (``R2_channels`` set).
+    ax : matplotlib Axes, optional
+    title : str, optional
+        Defaults to a title stating the split.
+    output_path : str, optional
+
+    Returns
+    -------
+    fig : matplotlib Figure
+    """
+    apply_publication_style()
+
+    parts = getattr(attribution, 'R2_channels', None)
+    if parts is None:
+        raise ValueError("attribution has no R2_channels; pass y to orthogonal_attribution")
+    parts = np.clip(np.asarray(parts, dtype=float), 0.0, None)
+    r2 = float(parts.sum())
+    reported = attribution.R2 if getattr(attribution, 'R2', None) is not None else r2
+    remainder = max(0.0, 1.0 - r2)
+
+    fig, ax, own = _get_axes(ax, (8.5, 2.6))
+    left = 0.0
+    segments = [(CHANNEL_LABELS[c], parts[k], CHANNEL_COLORS[c]) for k, c in enumerate('TIF')]
+    segments.append(('not explained', remainder, _UNEXPLAINED_COLOR))
+    for name, width, color in segments:
+        ax.barh(0, width, left=left, height=0.5, color=color, edgecolor=_SURFACE,
+                linewidth=2, label=f'{name}: {width:.3f}')
+        if width >= 0.06:
+            ax.text(left + width / 2, 0, f'{width:.2f}', ha='center', va='center', fontsize=10,
+                    color=_TEXT_PRIMARY if color in (_UNEXPLAINED_COLOR, CHANNEL_COLORS['I']) else _SURFACE,
+                    fontweight='bold')
+        left += width
+
+    ax.set_xlim(0, max(1.0, left))
+    ax.set_ylim(-0.6, 0.6)
+    ax.set_yticks([])
+    ax.set_xlabel(r'Share of target variance ($R^2$)', color=_TEXT_SECONDARY)
+    _recessive_axes(ax, grid_axis='')
+    ax.spines['left'].set_visible(False)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.0), borderaxespad=4.2,
+              ncol=4, frameon=False, fontsize=9)
+    if title is None:
+        title = (rf'Exact $R^2$ split: $R^2$ = {reported:.3f} = '
+                 rf'T {parts[0]:.3f} + I {parts[1]:.3f} + F {parts[2]:.3f}')
+    ax.set_title(title, fontsize=11, color=_TEXT_PRIMARY, loc='left')
+
+    return _finish(fig, output_path, own)
+
+
+def plot_ion_channel_shares(
+    attribution,
+    feature_names: Optional[List[str]] = None,
+    gamma: Optional[float] = 0.7,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    title: Optional[str] = 'Exact channel shares of each ion\'s predictive energy',
+    output_path: Optional[str] = None,
+) -> matplotlib.figure.Figure:
+    """
+    Stacked horizontal bars of pi_T, pi_I, pi_F per ion (each row sums to 1).
+
+    Ions are sorted by pi_T (most baseline-carried at the top). Optional
+    dashed guides mark the classification thresholds gamma and 1 - gamma.
+
+    Parameters
+    ----------
+    attribution : OrthogonalAttribution
+    feature_names : list of str, optional
+        Defaults to ``attribution.feature_names``.
+    gamma : float or None, default=0.7
+        Classification threshold to draw (None to omit).
+    ax : matplotlib Axes, optional
+    title : str, optional
+    output_path : str, optional
+
+    Returns
+    -------
+    fig : matplotlib Figure
+    """
+    apply_publication_style()
+
+    pi = np.column_stack([attribution.pi_T, attribution.pi_I, attribution.pi_F]).astype(float)
+    p = pi.shape[0]
+    names = feature_names or getattr(attribution, 'feature_names', None) or [f'Ion_{j}' for j in range(p)]
+    if len(names) != p:
+        raise ValueError("feature_names must have one entry per ion")
+
+    order = np.argsort(pi[:, 0])  # ascending -> largest pi_T drawn at the top
+    fig, ax, own = _get_axes(ax, (7.5, 0.42 * p + 1.6))
+    y = np.arange(p)
+    left = np.zeros(p)
+    for k, ch in enumerate('TIF'):
+        width = pi[order, k]
+        ax.barh(y, width, left=left, height=0.62, color=CHANNEL_COLORS[ch], edgecolor=_SURFACE,
+                linewidth=1.5, label=CHANNEL_LABELS[ch])
+        left += width
+
+    # Direct label: the baseline share at the end of the T segment, when it fits
+    for row, j in enumerate(order):
+        if pi[j, 0] >= 0.12:
+            ax.text(pi[j, 0] - 0.01, row, f'{pi[j, 0]:.2f}', ha='right', va='center',
+                    fontsize=8, color=_SURFACE, fontweight='bold')
+
+    if gamma is not None:
+        for g, lab in ((gamma, r'$\gamma$'), (1 - gamma, r'$1-\gamma$')):
+            ax.axvline(g, color=_TEXT_MUTED, linestyle='--', linewidth=0.8, zorder=3)
+            ax.text(g, 1.0, lab, transform=ax.get_xaxis_transform(), ha='center',
+                    va='bottom', fontsize=8, color=_TEXT_SECONDARY)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels([_pretty_ion(names[j]) for j in order])
+    ax.set_xlim(0, 1)
+    ax.set_xlabel('Share of predictive energy', color=_TEXT_SECONDARY)
+    _recessive_axes(ax, grid_axis='')
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 0.0), borderaxespad=4.0,
+              ncol=3, frameon=False, fontsize=9)
+    if title:
+        ax.set_title(title, fontsize=11, color=_TEXT_PRIMARY, loc='left', pad=16)
+
+    return _finish(fig, output_path, own)
+
+
+def plot_process_alignment(
+    alignment_df: pd.DataFrame,
+    metric: str = 'T_vs_F',
+    eps: float = 0.01,
+    ax: Optional[matplotlib.axes.Axes] = None,
+    title: Optional[str] = None,
+    output_path: Optional[str] = None,
+) -> matplotlib.figure.Figure:
+    """
+    Diverging bars: is each process baseline- or perturbation-aligned?
+
+    Takes the DataFrame of :func:`neutrohydro.orthogonal.subspace_alignment`.
+    With ``metric="T_vs_F"`` (default) each bar is
+    ``log2((enrich_T + eps) / (enrich_F + eps))``: positive means the
+    process direction is preferentially aligned with the baseline subspace,
+    negative with the perturbation subspace, 0 means no preference
+    relative to a random direction. ``metric="T"`` plots
+    ``log2(enrich_T + eps)`` (alignment with the baseline vs chance).
+    Processes whose dominant channel is I are tagged "(I)".
+
+    Parameters
+    ----------
+    alignment_df : DataFrame
+        Columns ``process``, ``enrich_T``, ``enrich_F`` (and ``dominant``).
+    metric : {"T_vs_F", "T"}
+    eps : float
+        Offset that keeps the log finite when a share is 0.
+    ax : matplotlib Axes, optional
+    title : str, optional
+    output_path : str, optional
+
+    Returns
+    -------
+    fig : matplotlib Figure
+    """
+    apply_publication_style()
+
+    required = ['process', 'enrich_T'] + (['enrich_F'] if metric == 'T_vs_F' else [])
+    _require_columns(alignment_df, required, 'plot_process_alignment')
+    if metric not in ('T_vs_F', 'T'):
+        raise ValueError("metric must be 'T_vs_F' or 'T'")
+
+    df = alignment_df.copy()
+    enrich_T = df['enrich_T'].astype(float).to_numpy()
+    if metric == 'T_vs_F':
+        enrich_F = df['enrich_F'].astype(float).to_numpy()
+        value = np.log2((enrich_T + eps) / (enrich_F + eps))
+        xlabel = r'$\log_2$(T enrichment / F enrichment)'
+        neg_label, pos_label = 'perturbation-aligned (F)', 'baseline-aligned (T)'
+    else:
+        value = np.log2(enrich_T + eps)
+        xlabel = r'$\log_2$(T enrichment over chance)'
+        neg_label, pos_label = 'less baseline than chance', 'more baseline than chance'
+    df['_value'] = value
+    df = df[np.isfinite(df['_value'])].sort_values('_value')
+
+    names = []
+    for _, row in df.iterrows():
+        tag = ' (I)' if str(row.get('dominant', '')) == 'I' else ''
+        names.append(f"{row['process']}{tag}")
+
+    fig, ax, own = _get_axes(ax, (7.8, 0.32 * len(df) + 1.8))
+    y = np.arange(len(df))
+    vals = df['_value'].to_numpy()
+    colors = np.where(vals >= 0, CHANNEL_COLORS['T'], CHANNEL_COLORS['F'])
+    ax.barh(y, vals, height=0.62, color=colors, edgecolor=_SURFACE, linewidth=1.0)
+    ax.axvline(0, color=_TEXT_SECONDARY, linewidth=1.0, zorder=3)
+    lim = max(1.0, float(np.nanmax(np.abs(vals))) * 1.08) if len(vals) else 1.0
+    ax.set_xlim(-lim, lim)
+    ax.text(0.02 * lim, len(df) - 0.45, 'chance level', ha='left', va='bottom', fontsize=8,
+            color=_TEXT_SECONDARY)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(names, fontsize=9)
+    ax.set_xlabel(xlabel, color=_TEXT_SECONDARY)
+    _recessive_axes(ax, grid_axis='x')
+
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(color=CHANNEL_COLORS['T'], label=pos_label),
+                       Patch(color=CHANNEL_COLORS['F'], label=neg_label)],
+              loc='upper center', bbox_to_anchor=(0.5, 0.0), borderaxespad=4.0,
+              ncol=2, frameon=False, fontsize=9)
+    if title is None:
+        title = 'Process alignment with the baseline vs perturbation subspaces'
+    ax.set_title(title, fontsize=11, color=_TEXT_PRIMARY, loc='left')
+
+    return _finish(fig, output_path, own)
