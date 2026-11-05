@@ -82,7 +82,9 @@ def main():
     plot_data = {
         'df': df,
         'df_meq': df_meq,
-        'nvip_result': results.nvip
+        'nvip_result': results.nvip,
+        'nsr_result': results.nsr,                     # pi_G for baseline fraction (v3)
+        'samples_result': results.sample_attribution,  # sample G values (v4)
     }
 
     # PLS loadings by channel

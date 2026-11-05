@@ -1056,48 +1056,82 @@ def _plot_vip_aggregate(
     ax.set_title('VIP Aggregate', fontsize=11)
 
 
+def _baseline_fraction_frame(
+    result,
+    feature_names: Optional[list[str]] = None,
+) -> Optional[pd.DataFrame]:
+    """
+    Collect per-ion pi_G values and labels for the baseline fraction panel.
+
+    ``result`` may be an ``NSRResult`` (or any object with a ``pi_G``
+    attribute), a ``PipelineResults`` (pi_G is read from its ``nsr``
+    attribute) or a DataFrame with a ``pi_G`` column. Labels come from the
+    result when it carries them, otherwise from ``feature_names``, and
+    default to generic ion labels.
+
+    Returns None when there is no pi_G, or when the number of labels does
+    not match the number of pi_G values.
+    """
+    if isinstance(result, pd.DataFrame):
+        if 'pi_G' not in result.columns:
+            return None
+        pi_G = result['pi_G']
+        label_col = next((c for c in ('ion', 'feature') if c in result.columns), None)
+        names = result[label_col] if label_col is not None else feature_names
+    else:
+        pi_G = getattr(result, 'pi_G', None)
+        if pi_G is None:
+            pi_G = getattr(getattr(result, 'nsr', None), 'pi_G', None)
+        names = getattr(result, 'feature_names', None)
+        if names is None:
+            names = getattr(result, 'ion_names', None)
+        if names is None:
+            names = feature_names
+
+    if pi_G is None:
+        return None
+    pi_G = np.asarray(pi_G, dtype=float).ravel()
+    if pi_G.size == 0:
+        return None
+    if names is None:
+        names = [f'Ion {i}' for i in range(pi_G.size)]
+    names = [str(name) for name in names]
+    if len(names) != pi_G.size:
+        return None
+    return pd.DataFrame({'ion': names, 'pi_G': pi_G})
+
+
 def _plot_baseline_fraction(
     ax: matplotlib.axes.Axes,
-    nvip_result,
+    nsr_result,
+    feature_names: Optional[list[str]] = None,
     **kwargs
 ) -> None:
-    """Render baseline fraction (pi_G) bar chart onto axes."""
-    if nvip_result is None:
+    """
+    Render baseline fraction (pi_G) bar chart onto axes.
+
+    ``nsr_result`` is an ``NSRResult``, a ``PipelineResults`` or a DataFrame
+    with a ``pi_G`` column. ``feature_names`` labels the ions when the result
+    does not carry its own names (``NSRResult`` does not). An ``NVIPResult``
+    has no pi_G, so passing one shows a placeholder.
+    """
+    if nsr_result is None:
         ax.text(0.5, 0.5, 'No data', ha='center', va='center', transform=ax.transAxes)
         return
-    
-    if isinstance(nvip_result, pd.DataFrame):
-        if 'pi_G' in nvip_result.columns:
-            df = nvip_result[['feature', 'pi_G']].copy() if 'feature' in nvip_result.columns else nvip_result
-        else:
-            ax.text(0.5, 0.5, 'No pi_G data', ha='center', va='center', transform=ax.transAxes)
-            return
-    else:
-        pi_G = getattr(nvip_result, 'pi_G', [])
-        names = getattr(nvip_result, 'feature_names', getattr(nvip_result, 'ion_names', kwargs.get('feature_names', [])))
-        
-        # If names still missing but we have pi_G, use numeric indices
-        if len(names) == 0 and len(pi_G) > 0:
-            names = [f'Ion {i}' for i in range(len(pi_G))]
-            
-        df = pd.DataFrame({
-            'ion': names,
-            'pi_G': pi_G,
-        })
-    
-    if df.empty or 'pi_G' not in df.columns:
+
+    df = _baseline_fraction_frame(nsr_result, feature_names)
+    if df is None:
         ax.text(0.5, 0.5, 'No pi_G data', ha='center', va='center', transform=ax.transAxes)
         return
-    
+
     df = df.sort_values('pi_G', ascending=False)
-    ion_col = 'ion' if 'ion' in df.columns else 'feature'
-    
-    sns.barplot(x=ion_col, y='pi_G', data=df, palette='magma', ax=ax, hue=ion_col)
+
+    sns.barplot(x='ion', y='pi_G', data=df, palette='magma', ax=ax, hue='ion')
     legend = ax.get_legend()
     if legend is not None:
         legend.remove()
     ax.set_xticks(np.arange(len(df)))
-    ax.set_xticklabels(df[ion_col], rotation=45, ha='right', fontsize=8)
+    ax.set_xticklabels(df['ion'], rotation=45, ha='right', fontsize=8)
     ax.set_ylabel('πG', fontsize=10)
     ax.set_xlabel('')
     ax.set_title('Baseline Fraction (πG)', fontsize=11)
@@ -1230,7 +1264,17 @@ def create_figure(
     layout : str
         Layout string like '[g1|g2][i1]' or preset name like 'gibbs'
     data : dict
-        Data dictionary with keys: 'df', 'df_meq', 'mineral_result', 'nvip_result'
+        Data dictionary. Panels whose data is missing show a placeholder.
+        Keys:
+
+        - 'df', 'df_meq': ion data in mg/L and meq/L (Gibbs and correlation)
+        - 'mineral_result': MineralInversionResult (mineral panels)
+        - 'nvip_result': NVIPResult (VIP and model panels; also labels the
+          ions of the baseline fraction panel)
+        - 'nsr_result': NSRResult, PipelineResults or DataFrame with a
+          'pi_G' column (baseline fraction panel 'v3')
+        - 'samples_result': SampleAttributionResult or DataFrame with a
+          'G' column (sample G distribution panel 'v4')
     figsize : tuple, optional
         Override figure size
     output_path : str, optional
@@ -1303,7 +1347,12 @@ def create_figure(
                 if 'g_histogram' in func_name:
                     func(ax, samples_result)
                 elif 'baseline_fraction' in func_name:
-                    func(ax, nsr_result or nvip_result, feature_names=getattr(nvip_result, 'feature_names', None)) 
+                    # pi_G comes from the NSR result; the NVIP result supplies ion labels.
+                    func(
+                        ax,
+                        nsr_result if nsr_result is not None else nvip_result,
+                        feature_names=getattr(nvip_result, 'feature_names', None),
+                    )
                 else:
                     func(ax, nvip_result)
     
