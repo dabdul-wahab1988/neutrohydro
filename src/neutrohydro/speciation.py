@@ -1,9 +1,10 @@
 """
 Thermodynamic speciation and saturation index calculation using PHREEQC.
+
+The PHREEQC backend, ``phreeqpython``, is an optional dependency:
+``pip install "neutrohydro[thermo]"``.
 """
 
-import subprocess
-import sys
 import os
 import logging
 from dataclasses import dataclass
@@ -11,37 +12,21 @@ from typing import Dict, List, Optional
 import numpy as np
 from numpy.typing import NDArray
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- PHREEQC SETUP ---
-PHREEQC_BACKEND = None
+# phreeqpython is optional, so this module must import without it.
+# ThermodynamicValidator raises ImportError when it is used without the backend.
+PHREEQC_BACKEND: Optional[str] = None
+_PHREEQC_IMPORT_ERROR: Optional[ImportError] = None
 
-def install_phreeqpython():
-    """Auto-install phreeqpython for scientific accuracy."""
-    try:
-        import phreeqpython
-        return True
-    except ImportError:
-        logger.info("Installing phreeqpython for thermodynamic validation...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "phreeqpython"])
-            import phreeqpython
-            return True
-        except Exception as e:
-            logger.error(f"Failed to install phreeqpython: {e}")
-            return False
-
-# Initialize backend
-if install_phreeqpython():
+try:
     import phreeqpython
-    PHREEQC_BACKEND = 'phreeqpython'
+except ImportError as exc:
+    phreeqpython = None
+    _PHREEQC_IMPORT_ERROR = exc
 else:
-    raise RuntimeError(
-        "PHREEQC backend (phreeqpython) is required for thermodynamic validation. "
-        "Auto-installation failed. Please install it manually: pip install phreeqpython"
-    )
+    PHREEQC_BACKEND = "phreeqpython"
 
 @dataclass
 class ThermodynamicResult:
@@ -63,7 +48,19 @@ class ThermodynamicValidator:
         database_path : str, optional
             Path to the PHREEQC database file (.dat).
             Defaults to bundled wateq4f.dat if not provided.
+
+        Raises
+        ------
+        ImportError
+            If the optional ``phreeqpython`` dependency is not installed.
         """
+        if PHREEQC_BACKEND is None:
+            raise ImportError(
+                "Thermodynamic validation requires the optional dependency "
+                "phreeqpython. Install it with `pip install \"neutrohydro[thermo]\"` "
+                "(or `neutrohydro[all]`)."
+            ) from _PHREEQC_IMPORT_ERROR
+
         if database_path is None:
             # Try to use bundled wateq4f.dat by default for better trace metal support
             base_dir = os.path.dirname(__file__)

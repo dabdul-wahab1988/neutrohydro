@@ -68,6 +68,12 @@ cd neutrohydro
 pip install -e .
 ```
 
+Thermodynamic validation with PHREEQC needs the optional `thermo` extra, which installs `phreeqpython`:
+
+```bash
+pip install "neutrohydro[thermo]"
+```
+
 ## Quick Start
 
 ```python

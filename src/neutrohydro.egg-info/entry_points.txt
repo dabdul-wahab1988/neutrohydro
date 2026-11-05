@@ -1,3 +1,0 @@
-[console_scripts]
-neutrohydro = neutrohydro.cli:main
-neutrohydro-pipeline = neutrohydro.cli:pipeline_main
