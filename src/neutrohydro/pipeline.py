@@ -28,6 +28,14 @@ from neutrohydro.attribution import (
     SampleAttributionResult,
 )
 from neutrohydro.minerals import MineralInverter, MineralInversionResult
+from neutrohydro.orthogonal import (
+    OrthogonalNDGEncoder,
+    OrthogonalAttribution,
+    orthogonal_attribution,
+    orthogonal_nsr,
+    orthogonal_sample_attribution,
+    verify_jacobian_orthogonality,
+)
 
 
 @dataclass
@@ -40,10 +48,19 @@ class PipelineConfig:
     delta_s: float = 1e-10
 
     # NDG Encoder
+    # baseline_type: "robust_pca", "low_rank", "median", "hydrofacies", or
+    # "orthogonal" (Jacobian-orthogonal encoding with exact attribution; see
+    # neutrohydro.orthogonal). For "orthogonal", baseline_rank is the
+    # baseline rank (None = select by bootstrap parallel analysis).
     baseline_type: str = "robust_pca"
     baseline_rank: Optional[int] = 2
     falsity_map: str = "exponential"
     falsity_params: Optional[dict] = None
+    indeterminacy: str = "knn"            # legacy encoder: "knn", "rolling", "none"
+    n_neighbors: int = 5                  # legacy encoder neighbourhood size
+    indeterminacy_rank: Optional[int] = None  # orthogonal: I-band size (None = auto)
+    orthogonal_robust: bool = True        # orthogonal: falsity-reweighted covariance
+    random_state: Optional[int] = 0       # orthogonal: seed for rank selection
 
     # PNPLS Model
     n_components: int = 5
@@ -89,6 +106,9 @@ class PipelineResults:
 
     # Optional mineral results
     mineral_result: Optional[MineralInversionResult] = None
+
+    # Exact attribution (orthogonal encoding only)
+    orthogonal: Optional[OrthogonalAttribution] = None
 
     # Metadata
     feature_names: Optional[list[str]] = None
@@ -180,14 +200,30 @@ class NeutroHydroPipeline:
         )
         X_std, y_std = preprocessor.fit_transform(X, y, feature_names)
 
+        orthogonal_mode = self.config.baseline_type == "orthogonal"
+
         # 2. NDG Encoding
-        encoder = NDGEncoder(
-            baseline_type=self.config.baseline_type,
-            baseline_rank=self.config.baseline_rank,
-            falsity_map=self.config.falsity_map,
-            falsity_params=self.config.falsity_params,
-        )
-        triplets = encoder.fit_transform(X_std, groups)
+        if orthogonal_mode:
+            encoder = OrthogonalNDGEncoder(
+                rank_T=self.config.baseline_rank,
+                rank_I=self.config.indeterminacy_rank,
+                robust=self.config.orthogonal_robust,
+                lambda_F=self.config.lambda_F,
+                falsity_map=self.config.falsity_map,
+                falsity_params=self.config.falsity_params,
+                random_state=self.config.random_state,
+            )
+            triplets = encoder.fit_transform(X_std, groups)
+        else:
+            encoder = NDGEncoder(
+                baseline_type=self.config.baseline_type,
+                baseline_rank=self.config.baseline_rank,
+                falsity_map=self.config.falsity_map,
+                falsity_params=self.config.falsity_params,
+                indeterminacy=self.config.indeterminacy,
+                n_neighbors=self.config.n_neighbors,
+            )
+            triplets = encoder.fit_transform(X_std, groups)
 
         # 3. PNPLS Model
         model = PNPLS(
@@ -198,14 +234,22 @@ class NeutroHydroPipeline:
         )
         model.fit(triplets, y_std)
 
-        # 2. NVIP computation
+        # 4. NVIP computation
         nvip_result = compute_nvip(model, feature_names=feature_names)
 
-        # 5. NSR / pi_G
-        nsr = compute_nsr(nvip_result, self.config.epsilon, self.config.gamma)
+        ortho = None
+        if orthogonal_mode:
+            # 5-6. Exact attribution replaces the VIP-energy heuristic
+            ortho = orthogonal_attribution(model, triplets, y_std, feature_names)
+            ortho.checks.update(verify_jacobian_orthogonality(encoder, X_std))
+            nsr = orthogonal_nsr(ortho, self.config.gamma, self.config.epsilon)
+            sample_attribution = orthogonal_sample_attribution(ortho)
+        else:
+            # 5. NSR / pi_G
+            nsr = compute_nsr(nvip_result, self.config.epsilon, self.config.gamma)
 
-        # 6. Sample-level G_i
-        sample_attribution = compute_sample_baseline_fraction(model, triplets, nsr)
+            # 6. Sample-level G_i
+            sample_attribution = compute_sample_baseline_fraction(model, triplets, nsr)
 
         # Predictions
         y_pred_std = model.predict(triplets)
@@ -251,6 +295,7 @@ class NeutroHydroPipeline:
             y_train=y, # Save original target
             r2_train=r2_train,
             mineral_result=mineral_result,
+            orthogonal=ortho,
             feature_names=feature_names,
             config=self.config,
         )
@@ -315,7 +360,7 @@ class NeutroHydroPipeline:
             self.results_.feature_names,
         )
 
-        return {
+        summary = {
             "config": asdict(self.results_.config) if self.results_.config else {},
             "model": {
                 "n_components": self.results_.model.components_.n_components,
@@ -331,6 +376,22 @@ class NeutroHydroPipeline:
             "attribution": attr_summary,
             "feature_names": self.results_.feature_names,
         }
+
+        ortho = self.results_.orthogonal
+        if ortho is not None:
+            basis = self.results_.encoder.basis_
+            summary["orthogonal"] = {
+                "rank_T": basis.rank_T,
+                "rank_I": basis.rank_I,
+                "variance_share": basis.explained_variance_ratio,
+                "R2_weighted": ortho.R2,
+                "R2_T": None if ortho.R2_channels is None else float(ortho.R2_channels[0]),
+                "R2_I": None if ortho.R2_channels is None else float(ortho.R2_channels[1]),
+                "R2_F": None if ortho.R2_channels is None else float(ortho.R2_channels[2]),
+                "checks": {k: float(v) for k, v in ortho.checks.items()},
+            }
+
+        return summary
 
     def to_dataframes(self) -> dict[str, pd.DataFrame]:
         """
@@ -364,6 +425,10 @@ class NeutroHydroPipeline:
                 'Predicted': self.results_.y_pred_original,
                 'Residual': self.results_.y_train - self.results_.y_pred_original
             })
+
+        if self.results_.orthogonal is not None:
+            dataframes['orthogonal_ions'] = self.results_.orthogonal.ions_dataframe()
+            dataframes['orthogonal_samples'] = self.results_.orthogonal.samples_dataframe()
 
         # Include mineral results if available
         if self.results_.mineral_result:

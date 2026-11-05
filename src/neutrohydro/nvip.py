@@ -227,12 +227,16 @@ def compute_nvip_bootstrap(
         # Bootstrap resample
         idx = rng.choice(n, size=n, replace=True)
 
-        # Create resampled triplets
+        # Create resampled triplets (keep the encoding and row weights so
+        # orthogonal triplets are not mistaken for legacy memberships)
+        weights = getattr(triplets, "sample_weights", None)
         triplets_b = TripletData(
             T=triplets.T[idx, :],
             I=triplets.I[idx, :],
             F=triplets.F[idx, :],
             R=triplets.R[idx, :],
+            encoding=getattr(triplets, "encoding", "ndg"),
+            sample_weights=None if weights is None else weights[idx],
         )
         y_b = y[idx]
 
@@ -242,6 +246,7 @@ def compute_nvip_bootstrap(
             rho_I=model.rho_I,
             rho_F=model.rho_F,
             lambda_F=model.lambda_F,
+            center=model.center,
         )
         model_b.fit(triplets_b, y_b)
 
