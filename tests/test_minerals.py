@@ -196,3 +196,49 @@ class TestConvertToMeq:
 
         with pytest.raises(ValueError):
             convert_to_meq(concentrations, ion_charges, ion_masses, "invalid")
+
+
+class TestIdentifiabilityAndUncertainty:
+    """Jacobian-based identifiability and error propagation."""
+
+    def test_orthogonality_defect(self):
+        from neutrohydro.minerals import orthogonality_defect
+
+        assert orthogonality_defect(np.eye(3)) == pytest.approx(0.0, abs=1e-12)
+        assert orthogonality_defect(np.array([[1.0, 1.0], [0.0, 1.0]])) > 0
+        assert orthogonality_defect(np.array([[1.0, 2.0], [1.0, 2.0]])) == np.inf
+
+    def test_aliases_in_standard_library(self):
+        inv = MineralInverter(ion_order=STANDARD_IONS[:9])
+        rep = inv.identifiability()
+        groups = [set(g) for g in rep["alias_groups"]]
+        assert {"Gypsum", "Anhydrite"} in groups
+        assert rep["underdetermined"]
+        assert ("Gypsum", "Anhydrite") in [(a, b) for a, b, _ in rep["aliased_pairs"]] or \
+               ("Anhydrite", "Gypsum") in [(a, b) for a, b, _ in rep["aliased_pairs"]]
+
+    def test_linear_dependence_detected(self):
+        from neutrohydro.minerals import stoichiometric_identifiability
+
+        # Dolomite = Calcite + Magnesite on (Ca, Mg, HCO3)
+        A = np.array([[2.0, 0.0, 2.0], [0.0, 2.0, 2.0], [2.0, 2.0, 4.0]])
+        rep = stoichiometric_identifiability(A, ["Calcite", "Magnesite", "Dolomite"])
+        assert np.all(np.isinf(rep["vif"]))
+        assert rep["rank"] == 2
+
+    def test_uncertainty_propagation(self, meq_data):
+        inv = MineralInverter(ion_order=STANDARD_IONS[:9])
+        c = meq_data[:, :9] if meq_data.shape[1] >= 9 else meq_data
+        res = inv.invert(c, rel_error=0.05)
+        assert res.s_std.shape == res.s.shape
+        assert np.all(res.s_std >= 0)
+        assert np.all(res.s_std[res.s == 0] == 0)
+        assert np.all(res.support_condition >= 1)
+        # error bars scale linearly with the analytical error
+        res2 = inv.invert(c, rel_error=0.10)
+        np.testing.assert_allclose(res2.s_std, 2 * res.s_std, rtol=1e-8, atol=1e-12)
+
+    def test_no_uncertainty_by_default(self, meq_data):
+        inv = MineralInverter(ion_order=STANDARD_IONS[:9])
+        c = meq_data[:, :9] if meq_data.shape[1] >= 9 else meq_data
+        assert inv.invert(c).s_std is None
