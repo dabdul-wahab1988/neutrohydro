@@ -170,3 +170,58 @@ class TestCensoringIndeterminacy:
         I = create_censoring_indeterminacy(X, detection_limits, iota_dl=0.8)
 
         assert I[0, 0] == 0.8
+
+
+class TestOutOfSampleTransform:
+    """Regression tests: transform applies the fitted baseline operator."""
+
+    @pytest.fixture
+    def X_std(self, sample_data):
+        X, y = sample_data
+        return Preprocessor().fit_transform(X, y)[0]
+
+    @pytest.mark.parametrize("kind,rank", [("median", None), ("low_rank", 2), ("robust_pca", 2)])
+    def test_encoding_does_not_depend_on_batch(self, X_std, kind, rank):
+        enc = NDGEncoder(baseline_type=kind, baseline_rank=rank).fit(X_std)
+        new = X_std[:10] + 3.0
+        alone = enc.transform(new)
+        mixed = enc.transform(np.vstack([new, X_std]))
+        for ch in ("T", "I", "F", "R"):
+            np.testing.assert_allclose(getattr(alone, ch), getattr(mixed, ch)[:10], atol=1e-6)
+
+    def test_median_shift_is_seen_as_perturbation(self, X_std):
+        enc = NDGEncoder(baseline_type="median").fit(X_std)
+        shifted = enc.transform(X_std[:10] + 5.0)
+        base = enc.transform(X_std[:10])
+        np.testing.assert_allclose(shifted.R - base.R, 5.0)
+
+    def test_single_sample_transform_matches_batch(self, X_std):
+        enc = NDGEncoder(baseline_type="low_rank", baseline_rank=2).fit(X_std)
+        batch = enc.transform(X_std)
+        one = enc.transform(X_std[3:4])
+        np.testing.assert_allclose(one.T[0], batch.T[3])
+        np.testing.assert_allclose(one.I[0], batch.I[3])
+
+    def test_low_rank_fit_transform_equals_transform(self, X_std):
+        enc = NDGEncoder(baseline_type="low_rank", baseline_rank=2)
+        a = enc.fit_transform(X_std)
+        np.testing.assert_allclose(enc.transform(X_std).T, a.T, atol=1e-10)
+
+    def test_knn_indeterminacy_is_order_invariant(self, X_std):
+        enc = NDGEncoder().fit(X_std)
+        perm = np.random.default_rng(0).permutation(len(X_std))
+        np.testing.assert_allclose(enc.transform(X_std[perm]).I, enc.transform(X_std).I[perm])
+
+    def test_rolling_indeterminacy_still_available(self, X_std):
+        enc = NDGEncoder(indeterminacy="rolling").fit(X_std)
+        I = enc.transform(X_std).I
+        assert I.shape == X_std.shape and I.min() >= 0 and I.max() <= 1
+
+    def test_hydrofacies_unseen_group_falls_back(self, X_std):
+        groups = np.arange(len(X_std)) % 2
+        enc = NDGEncoder(baseline_type="hydrofacies").fit(X_std, groups)
+        with pytest.warns(UserWarning):
+            trip = enc.transform(X_std[:3], groups=np.array([0, 1, 7]))
+        np.testing.assert_allclose(
+            trip.T[2], enc.params_.baseline_metadata["global_medians"]
+        )
