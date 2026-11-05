@@ -30,6 +30,29 @@ NeutroHydro implements the **Neutralization-Displacement Geosystem (NDG) theory 
   - Standard mineral library included
   - Custom mineral definitions supported
   - **Universal Framework**: Includes Redox, Pollution, and Salinity modules
+  - **Identifiability & error bars**: aliased minerals (e.g. Gypsum ≡ Anhydrite) are
+    reported, and analytical error is propagated through the inversion Jacobian
+
+- **Jacobian-Orthogonal Encoding** (`baseline_type="orthogonal"`): the T, I and F channels
+  respond to mutually orthogonal directions of ion space, which gives:
+  - an exact split of R² into baseline + indeterminate + perturbation parts
+  - an exact per-ion π_G, with predictions identical to plain PLS (the encoding
+    cannot manufacture fit)
+  - process alignment: which minerals or end-members lie in the baseline or
+    perturbation subspace
+  - see [docs/jacobian_orthogonality.md](docs/jacobian_orthogonality.md)
+
+> **Results change in this version.** The PLS1 weight update previously ran a power
+> iteration that converged to the first principal component, so the model was principal
+> component regression rather than PLS. Several other issues were also fixed:
+>
+> - PLS now centers the data and fits an intercept.
+> - `transform` re-estimated the baseline on every new batch.
+> - The default I channel depended on row order.
+> - The robust PCA baseline was stopped before it converged.
+>
+> R², VIP and π_G from earlier versions should be recomputed. Details are in
+> [docs/mathematical_critique.md](docs/mathematical_critique.md).
 
 ## Installation
 
@@ -132,6 +155,33 @@ result = inverter.invert(c_meq, pi_G=nsr.pi_G)
 print(result.mineral_fractions)  # Normalized contributions
 print(result.plausible)          # Plausibility mask
 ```
+
+### Jacobian-Orthogonal Mode (exact attribution)
+
+```python
+from neutrohydro import NeutroHydroPipeline
+from neutrohydro.pipeline import PipelineConfig
+
+config = PipelineConfig(
+    baseline_type="orthogonal",
+    baseline_rank=None,        # None: chosen by bootstrap parallel analysis
+    log_transform=True,
+    n_components=3,
+)
+results = NeutroHydroPipeline(config).fit(X, y, feature_names=ion_names)
+
+ortho = results.orthogonal
+print(ortho.R2, ortho.R2_channels)        # R2 = R2_T + R2_I + R2_F (exact)
+print(ortho.ions_dataframe())             # per-ion exact shares pi_T, pi_I, pi_F
+print(ortho.samples_dataframe().head())   # per-sample (tau, iota, phi), sum to 1
+```
+
+```bash
+neutrohydro run data.csv --target TDS --baseline orthogonal
+```
+
+See `examples/jacobian_orthogonality_demo.py` for process alignment, scenario analysis
+and mineral error bars on the bundled `data.csv`.
 
 ### Configuration Options
 
@@ -261,11 +311,16 @@ Maps each ion concentration to a triplet **(T, I, F)**:
 
 ### 2. L2-Additive VIP Decomposition
 
-**Theorem**: Variable importance decomposes additively across channels:
+**Identity**: Variable importance decomposes additively across channels:
 
 $$VIP_{agg}^2(j) = VIP_T^2(j) + VIP_I^2(j) + VIP_F^2(j)$$
 
-This allows **unambiguous attribution** of prediction importance to baseline vs. perturbation sources.
+This identity holds by construction, since squared weights add over a partition. It
+makes attribution *unambiguous* only when the channels do not overlap, that is, when
+their Jacobians are orthogonal. With the legacy encoder they overlap (measured
+entanglement 0.5–0.65 on `data.csv`), so the T/I/F split is not unique. Use
+`baseline_type="orthogonal"` for an attribution that is exact and unique
+([docs/jacobian_orthogonality.md](docs/jacobian_orthogonality.md)).
 
 ### 3. Non-Compositional Framework
 

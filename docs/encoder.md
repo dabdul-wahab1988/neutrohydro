@@ -50,6 +50,14 @@ $$(X_T)_{ij} = \text{median}_{i'}(X^{(\text{std})}_{i'j})$$
 
 **When to use**: Default choice for most applications.
 
+> **Caution.** The median baseline is the same vector for every sample, so the $T$ channel
+> is constant: it carries no sample-to-sample information and cannot explain variation in
+> the target. After centering in PNPLS its columns are zero and $\pi_G = 0$ for every ion.
+> The falsity map also uses $|R|$, so enrichment and depletion of an ion give the same
+> $F$; only the magnitude of the deviation is kept. Use a low-rank baseline, or
+> `baseline_type="orthogonal"` (signed components, see
+> [Jacobian Orthogonality](jacobian_orthogonality.md)), when baseline attribution matters.
+
 #### Option 2: Hydrofacies-Conditioned Median
 
 $$(X_T)_{ij} = \text{median}_{i': g(i')=g(i)}(X^{(\text{std})}_{i'j})$$
